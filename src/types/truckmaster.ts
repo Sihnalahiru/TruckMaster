@@ -137,6 +137,7 @@ export interface StudyPageData {
   jaPdfPage: number | null;
   japaneseParagraphs: JapaneseParagraph[];
   englishParagraphs: string[];
+  sinhalaParagraphs?: string[];
   images: SectionPageImage[];
   extractionStatus: 'VERIFIED' | 'PENDING' | 'NEEDS_REVIEW' | 'FAILED';
 }

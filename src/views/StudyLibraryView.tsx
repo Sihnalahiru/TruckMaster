@@ -4,15 +4,20 @@ import {
   ArrowLeft,
   ArrowRight,
   Bookmark,
+  BookOpen,
   CheckCircle2,
+  ChevronDown,
   ClipboardCheck,
   Lightbulb,
+  List,
   Search,
-  StickyNote,
+  X,
 } from 'lucide-react';
 import { loadChapter } from '../lib/contentLoader';
+import { playFeedbackTone } from '../lib/sound';
 import { ResilientImage } from '../components/ResilientImage';
 import { RubyText } from '../components/RubyText';
+import { HighwayTruckProgress } from '../components/RewardEffects';
 import type {
   ChapterData,
   ContentManifest,
@@ -25,12 +30,12 @@ interface StudyLibraryViewProps {
   manifest: ContentManifest;
   progress: LearnerProgressState;
   languagePrefs: LanguageDisplayPrefs;
+  soundEnabled: boolean;
   initialChapterId?: string;
   initialSectionId?: string;
   onUpdateLanguagePrefs: (prefs: LanguageDisplayPrefs) => void;
   onToggleSectionComplete: (sectionId: string, label: string) => void;
   onToggleSectionBookmark: (sectionId: string) => void;
-  onSaveSectionNote: (sectionId: string, note: string) => void;
   onTrackLastVisited: (chapterId: string, sectionId: string) => void;
   onGoToCbt: () => void;
 }
@@ -39,12 +44,12 @@ export function StudyLibraryView({
   manifest,
   progress,
   languagePrefs,
+  soundEnabled,
   initialChapterId,
   initialSectionId,
   onUpdateLanguagePrefs,
   onToggleSectionComplete,
   onToggleSectionBookmark,
-  onSaveSectionNote,
   onTrackLastVisited,
   onGoToCbt,
 }: StudyLibraryViewProps) {
@@ -58,6 +63,7 @@ export function StudyLibraryView({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [topicDrawerOpen, setTopicDrawerOpen] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<{ src: string; caption: string } | null>(null);
 
   useEffect(() => {
@@ -107,7 +113,7 @@ export function StudyLibraryView({
     }
   }, [chapterId, activeSection?.sectionId]);
 
-  // Global manifest search across all 62 sections
+  // Global search across all 62 sections
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
@@ -145,7 +151,7 @@ export function StudyLibraryView({
         }
       }
     }
-    return results.slice(0, 12);
+    return results.slice(0, 14);
   }, [manifest, searchQuery]);
 
   const isCompleted = activeSection
@@ -154,72 +160,36 @@ export function StudyLibraryView({
   const isBookmarked = activeSection
     ? progress.bookmarkedSectionIds.includes(activeSection.sectionId)
     : false;
-  const noteValue = activeSection ? progress.sectionNotes[activeSection.sectionId] || '' : '';
+
+  const chapterSecIds = useMemo(() => flatSections.map((x) => x.section.sectionId), [flatSections]);
+  const chapterDoneCount = chapterSecIds.filter((id) =>
+    progress.completedSectionIds.includes(id),
+  ).length;
+  const chapterPct =
+    chapterSecIds.length > 0 ? Math.round((chapterDoneCount / chapterSecIds.length) * 100) : 0;
 
   const toggleLang = (key: keyof LanguageDisplayPrefs) => {
+    playFeedbackTone('tap', soundEnabled);
     onUpdateLanguagePrefs({ ...languagePrefs, [key]: !languagePrefs[key] });
   };
 
+  const selectSection = (nextSectionId: string) => {
+    playFeedbackTone('nav', soundEnabled);
+    setSectionId(nextSectionId);
+    setTopicDrawerOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Chapter Selector + Search Header */}
+    <div className="space-y-5 max-w-4xl mx-auto">
+      {/* Compact Portrait-First Chapter & Lesson Navigator Card */}
       <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              <span>Structured Textbook Library</span>
-              <span aria-hidden="true" className="mx-2">·</span>
-              <span className="font-mono tabular-nums">
-                {progress.completedSectionIds.length}/{manifest.counts.sections} sections complete
-              </span>
-            </p>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mt-0.5">
-              Official SSW Truck Driving Syllabus
-            </h1>
-          </div>
-
-          <div className="relative w-full md:w-72">
-            <Search
-              className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search topic, KYT, page #..."
-              aria-label="Search study sections"
-              className="w-full min-h-[42px] pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#0B4F8A]"
-            />
-            {searchResults.length > 0 && (
-              <div className="absolute right-0 left-0 top-full mt-1.5 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-                {searchResults.map((res) => (
-                  <button
-                    key={res.sectionId}
-                    type="button"
-                    onClick={() => {
-                      setChapterId(res.chapterId);
-                      setSectionId(res.sectionId);
-                      setSearchQuery('');
-                    }}
-                    className="w-full text-left px-3.5 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800"
-                  >
-                    <p className="text-xs font-mono text-slate-500 dark:text-slate-400">
-                      Ch.{res.chapterNum} · {res.code} · {res.pages}
-                    </p>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                      {res.titleEn}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{res.titleJa}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 4 Master Syllabus Chapter Tabs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5" role="tablist" aria-label="Chapters">
+        {/* 4-Chapter Horizontal Quick Tabs */}
+        <div
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2"
+          role="tablist"
+          aria-label="Syllabus Chapters"
+        >
           {manifest.chapters.map((ch) => {
             const active = ch.id === chapterId;
             const secIds = ch.topics.flatMap((t) => t.sections.map((s) => s.sectionId));
@@ -231,44 +201,99 @@ export function StudyLibraryView({
                 role="tab"
                 aria-selected={active}
                 onClick={() => {
+                  playFeedbackTone('nav', soundEnabled);
                   setChapterId(ch.id);
                   if (secIds[0]) setSectionId(secIds[0]);
                 }}
-                className={`text-left p-3.5 rounded-xl border transition-colors min-h-[44px] ${
+                className={`tm-card-press text-left px-3 py-2.5 rounded-xl border transition-colors min-h-[48px] ${
                   active
-                    ? 'bg-[#0B4F8A] text-white border-[#0B4F8A]'
-                    : 'bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                    ? 'bg-[#0B4F8A] text-white border-[#0B4F8A] shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-800/60 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                 }`}
               >
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className={`font-mono ${active ? 'text-sky-100' : 'text-slate-500 dark:text-slate-400'}`}>
-                    Ch. {ch.number}
+                <div className="flex items-center justify-between text-[11px] font-mono tabular-nums">
+                  <span className={active ? 'text-amber-300 font-bold' : 'text-slate-500 dark:text-slate-400'}>
+                    CH {ch.number}
                   </span>
-                  <span className={`font-mono tabular-nums ${active ? 'text-sky-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                  <span className={active ? 'text-sky-100' : 'text-slate-500 dark:text-slate-400'}>
                     {done}/{secIds.length}
                   </span>
                 </div>
-                <p className="text-sm font-bold leading-snug truncate">{ch.titleEn}</p>
-                <p className={`text-xs truncate mt-0.5 ${active ? 'text-sky-100' : 'text-slate-500 dark:text-slate-400'}`}>
-                  {ch.titleJa}
-                </p>
+                <p className="text-xs font-bold truncate mt-0.5">{ch.titleEn}</p>
               </button>
             );
           })}
         </div>
 
-        {/* 5-Language Layer Toggle Bar */}
-        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mr-1">
-            5-Language Fields:
-          </span>
+        {/* One-Tap Portrait Section Switcher Bar (Replaces cramped sidebar!) */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={currentIdx <= 0}
+            onClick={() => {
+              if (currentIdx > 0) selectSection(flatSections[currentIdx - 1].section.sectionId);
+            }}
+            aria-label="Previous section"
+            className="w-11 h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-35 tm-card-press"
+          >
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              playFeedbackTone('tap', soundEnabled);
+              setTopicDrawerOpen(true);
+            }}
+            className="flex-1 min-w-0 min-h-[46px] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:border-[#0B4F8A] dark:hover:border-sky-400 flex items-center justify-between gap-2 text-left transition-colors tm-card-press"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <List className="w-4 h-4 text-[#0B4F8A] dark:text-sky-400 shrink-0" aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 truncate">
+                  {activeSection
+                    ? `Lesson ${currentIdx + 1}/${flatSections.length} · ${activeSection.code}`
+                    : 'Browse All Lessons'}
+                </p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                  {activeSection ? activeSection.titleEn : 'Loading lesson...'}
+                </p>
+              </div>
+            </div>
+            <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" aria-hidden="true" />
+          </button>
+
+          <button
+            type="button"
+            disabled={currentIdx < 0 || currentIdx >= flatSections.length - 1}
+            onClick={() => {
+              if (currentIdx >= 0 && currentIdx < flatSections.length - 1) {
+                selectSection(flatSections[currentIdx + 1].section.sectionId);
+              }
+            }}
+            aria-label="Next section"
+            className="w-11 h-11 rounded-xl bg-[#0B4F8A] text-white flex items-center justify-center shrink-0 hover:bg-[#083D6B] disabled:opacity-35 tm-card-press"
+          >
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Highway Route Progress for Active Chapter */}
+        <HighwayTruckProgress
+          percent={chapterPct}
+          leftLabel={`Chapter Route Progress (${chapterDoneCount}/${chapterSecIds.length} sections)`}
+          rightLabel={`${chapterPct}%`}
+        />
+
+        {/* 5-Language Instant Toggle Bar (All 5 Languages Always Available) */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
           {(
             [
+              ['showSinhala', 'සිංහල'],
               ['showJapanese', '日本語'],
               ['showFurigana', 'ふりがな'],
               ['showRomaji', 'Romaji'],
               ['showEnglish', 'English'],
-              ['showSinhala', 'සිංහල'],
             ] as Array<[keyof LanguageDisplayPrefs, string]>
           ).map(([key, label]) => {
             const on = languagePrefs[key];
@@ -278,9 +303,11 @@ export function StudyLibraryView({
                 type="button"
                 onClick={() => toggleLang(key)}
                 aria-pressed={on}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors whitespace-nowrap shrink-0 min-h-[34px] ${
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-colors whitespace-nowrap shrink-0 min-h-[36px] tm-card-press ${
                   on
-                    ? 'bg-slate-900 dark:bg-sky-500 text-white border-slate-900 dark:border-sky-500'
+                    ? key === 'showSinhala'
+                      ? 'bg-[#0D7A5F] text-white border-[#0D7A5F]'
+                      : 'bg-slate-900 dark:bg-sky-500 text-white border-slate-900 dark:border-sky-500'
                     : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
@@ -291,189 +318,143 @@ export function StudyLibraryView({
         </div>
       </section>
 
-      {/* Main Split: Left Topic/Section Tree + Right Extracted Multi-Page Reader */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Navigation Tree (4 cols) */}
-        <aside className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-4 lg:sticky lg:top-20 max-h-[75vh] overflow-y-auto">
-          {loading ? (
-            <p className="text-sm text-slate-500 p-4">Loading chapter structure...</p>
-          ) : error ? (
-            <p className="text-sm text-red-600 p-4">{error}</p>
-          ) : (
-            chapterData?.topics.map((topic) => (
-              <div key={topic.topicId} className="space-y-1.5">
-                <div className="px-2 pt-1">
-                  <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                    Topic {topic.code} · pp. {topic.startPage}–{topic.endPage}
-                  </p>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white leading-snug">
-                    {topic.titleEn}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  {topic.sections.map((sec) => {
-                    const active = sec.sectionId === activeSection?.sectionId;
-                    const done = progress.completedSectionIds.includes(sec.sectionId);
-                    const saved = progress.bookmarkedSectionIds.includes(sec.sectionId);
-                    return (
-                      <button
-                        key={sec.sectionId}
-                        type="button"
-                        onClick={() => setSectionId(sec.sectionId)}
-                        className={`w-full text-left px-3 py-2.5 rounded-xl text-xs transition-colors flex items-start justify-between gap-2 min-h-[44px] ${
-                          active
-                            ? 'bg-[#0B4F8A]/10 dark:bg-sky-500/20 text-[#0B4F8A] dark:text-sky-300 font-semibold'
-                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/70'
-                        }`}
-                      >
-                        <div className="min-w-0">
-                          <span className="font-mono text-[11px] opacity-75 mr-1.5">{sec.code}</span>
-                          <span>{sec.titleEn}</span>
-                          <p className="text-[11px] opacity-75 truncate mt-0.5">{sec.titleJa}</p>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0 pt-0.5">
-                          {saved && <Bookmark className="w-3.5 h-3.5 text-amber-500 fill-current" aria-label="Bookmarked" />}
-                          {done && <CheckCircle2 className="w-3.5 h-3.5 text-[#0D7A5F] dark:text-emerald-400" aria-label="Completed" />}
-                        </div>
-                      </button>
-                    );
-                  })}
+      {/* Main Full-Width Portrait-Friendly Reading Canvas */}
+      <article className="space-y-5">
+        {loading || !activeSection || !activeTopic ? (
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center text-sm text-slate-500">
+            {error ? error : 'Loading structured textbook lesson...'}
+          </div>
+        ) : (
+          <>
+            {/* Section Title & Action Header */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                  <span>Section {activeSection.code}</span>
+                  <span aria-hidden="true" className="mx-2">·</span>
+                  <span>
+                    pp. {activeSection.printedPageStart}–{activeSection.printedPageEnd}
+                  </span>
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onToggleSectionBookmark(activeSection.sectionId)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border min-h-[40px] tm-card-press whitespace-nowrap ${
+                      isBookmarked
+                        ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300'
+                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
+                    }`}
+                  >
+                    <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} aria-hidden="true" />
+                    <span>{isBookmarked ? 'Saved' : 'Save'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onToggleSectionComplete(
+                        activeSection.sectionId,
+                        `${activeSection.code} ${activeSection.titleEn}`,
+                      )
+                    }
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl min-h-[40px] tm-card-press whitespace-nowrap ${
+                      isCompleted
+                        ? 'bg-[#0D7A5F] text-white'
+                        : 'bg-[#0B4F8A] text-white hover:bg-[#083D6B]'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+                    <span>{isCompleted ? 'Completed' : 'Mark Complete (+25 XP)'}</span>
+                  </button>
                 </div>
               </div>
-            ))
-          )}
-        </aside>
 
-        {/* Right Structured Source Reader (8 cols) */}
-        <article className="lg:col-span-8 space-y-5">
-          {loading || !activeSection || !activeTopic ? (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center text-sm text-slate-500">
-              {error ? error : 'Loading verified textbook content...'}
-            </div>
-          ) : (
-            <>
-              {/* Section Header & Actions */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                    <span>Section {activeSection.code}</span>
-                    <span aria-hidden="true" className="mx-2">·</span>
-                    <span>
-                      Printed pp. {activeSection.printedPageStart}–{activeSection.printedPageEnd}
-                    </span>
-                    <span aria-hidden="true" className="mx-2">·</span>
-                    <span>{activeSection.examRelevance}</span>
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onToggleSectionBookmark(activeSection.sectionId)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl border min-h-[40px] ${
-                        isBookmarked
-                          ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300'
-                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200'
-                      }`}
-                    >
-                      <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`} aria-hidden="true" />
-                      <span>{isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        onToggleSectionComplete(
-                          activeSection.sectionId,
-                          `${activeSection.code} ${activeSection.titleEn}`,
-                        )
-                      }
-                      className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl min-h-[40px] ${
-                        isCompleted
-                          ? 'bg-[#0D7A5F] text-white'
-                          : 'bg-[#0B4F8A] text-white hover:bg-[#083D6B]'
-                      }`}
-                    >
-                      <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
-                      <span>{isCompleted ? 'Completed' : 'Mark Complete'}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white [text-wrap:balance]">
-                    {activeSection.titleEn}
-                  </h2>
+              <div className="space-y-1.5">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white [text-wrap:balance]">
+                  {activeSection.titleEn}
+                </h1>
+                {languagePrefs.showJapanese && (
                   <p className="text-base font-semibold text-slate-700 dark:text-slate-300 font-jp">
                     {activeSection.titleJa}
                   </p>
-                  {languagePrefs.showSinhala && (
-                    <p className="text-sm font-semibold text-[#0B4F8A] dark:text-sky-400 font-sinhala">
-                      {activeSection.titleSi}
-                    </p>
-                  )}
-                </div>
-
-                {/* Sinhala Technical Explanation Block (Additional content, never replacing source text!) */}
-                {languagePrefs.showSinhala && (
-                  <div className="p-4 rounded-xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-900 space-y-1.5">
-                    <p className="text-xs font-semibold text-[#0B4F8A] dark:text-sky-300">
-                      සිංහල පැහැදිලි කිරීම · Sinhala Study Explanation (Verified Topic Overview)
-                    </p>
-                    <p className="text-sm text-slate-800 dark:text-slate-200 font-sinhala">
-                      {activeSection.sinhalaSummary}
-                    </p>
-                  </div>
                 )}
-
-                {/* Warnings & Exam Tips */}
-                {(activeSection.warnings.length > 0 || activeSection.examTips.length > 0) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                    {activeSection.warnings.length > 0 && (
-                      <div className="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/70 space-y-1.5">
-                        <p className="text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
-                          <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
-                          <span>Safety Warnings (Source Textbook)</span>
-                        </p>
-                        <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside">
-                          {activeSection.warnings.map((w, i) => (
-                            <li key={i}>{w}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {activeSection.examTips.length > 0 && (
-                      <div className="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/70 space-y-1.5">
-                        <p className="text-xs font-bold text-[#0D7A5F] dark:text-emerald-300 flex items-center gap-1.5">
-                          <Lightbulb className="w-3.5 h-3.5" aria-hidden="true" />
-                          <span>Exam Key Points</span>
-                        </p>
-                        <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside">
-                          {activeSection.examTips.map((tip, i) => (
-                            <li key={i}>{tip}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
+                {languagePrefs.showSinhala && (
+                  <p className="text-sm font-bold text-[#0D7A5F] dark:text-emerald-400 font-sinhala">
+                    {activeSection.titleSi}
+                  </p>
                 )}
               </div>
 
-              {/* Extracted Source Pages — Verbatim Multi-Language Structured Cards */}
-              {activeSection.pages.map((pg) => (
+              {/* Sinhala Topic Overview */}
+              {languagePrefs.showSinhala && (
+                <div className="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900 space-y-1">
+                  <p className="text-xs font-bold text-[#0D7A5F] dark:text-emerald-300">
+                    සිංහල සාරාංශය · Topic Overview
+                  </p>
+                  <p className="text-sm text-slate-800 dark:text-slate-200 font-sinhala">
+                    {activeSection.sinhalaSummary}
+                  </p>
+                </div>
+              )}
+
+              {/* Warnings & Exam Tips */}
+              {(activeSection.warnings.length > 0 || activeSection.examTips.length > 0) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  {activeSection.warnings.length > 0 && (
+                    <div className="p-3.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/70 space-y-1.5">
+                      <p className="text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span>Safety Warnings</span>
+                      </p>
+                      <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside">
+                        {activeSection.warnings.map((w, i) => (
+                          <li key={i}>{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {activeSection.examTips.length > 0 && (
+                    <div className="p-3.5 rounded-xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-900/70 space-y-1.5">
+                      <p className="text-xs font-bold text-[#0B4F8A] dark:text-sky-300 flex items-center gap-1.5">
+                        <Lightbulb className="w-3.5 h-3.5" aria-hidden="true" />
+                        <span>Exam Key Points</span>
+                      </p>
+                      <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside">
+                        {activeSection.examTips.map((tip, i) => (
+                          <li key={i}>{tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Extracted Textbook Pages — Complete 5-Language Cards (Japanese + Furigana + Romaji + English + FULL SINHALA) */}
+            {activeSection.pages.map((pg) => {
+              const cleanEnglish = (pg.englishParagraphs || []).filter(
+                (p) => !/^\d+$/.test(String(p).trim()),
+              );
+              const sinhalaParas = pg.sinhalaParagraphs || [];
+
+              return (
                 <section
                   key={pg.printedPage}
                   className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden"
                 >
-                  <div className="px-5 py-3 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="font-mono tabular-nums font-semibold text-slate-700 dark:text-slate-200">
+                  <div className="px-4 sm:px-5 py-2.5 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span className="font-mono tabular-nums font-bold text-slate-800 dark:text-slate-100">
                       Textbook Page {pg.printedPage}
                     </span>
                     <span className="font-mono tabular-nums">
-                      EN PDF p.{pg.enPdfPage ?? '—'} · JA PDF p.{pg.jaPdfPage ?? '—'} · Status: {pg.extractionStatus}
+                      {pg.images.length > 0 ? `${pg.images.length} diagram${pg.images.length > 1 ? 's' : ''}` : 'Text page'}
                     </span>
                   </div>
 
-                  {/* Original Diagrams mapped directly to this source page */}
+                  {/* Original Diagrams */}
                   {pg.images.length > 0 && (
-                    <div className="p-5 bg-slate-50/50 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800">
+                    <div className="p-4 sm:p-5 bg-slate-50/50 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800">
                       <div className={`grid gap-4 ${pg.images.length > 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                         {pg.images.map((im) => (
                           <figure
@@ -499,14 +480,16 @@ export function StudyLibraryView({
                               />
                             </button>
                             <figcaption className="mt-2.5 text-center space-y-0.5 text-xs">
-                              <p className="font-medium text-slate-700 dark:text-slate-300">
-                                {im.captionEn}
-                              </p>
+                              {languagePrefs.showEnglish && (
+                                <p className="font-medium text-slate-700 dark:text-slate-300">
+                                  {im.captionEn}
+                                </p>
+                              )}
                               {languagePrefs.showJapanese && (
                                 <p className="text-slate-500 dark:text-slate-400">{im.captionJa}</p>
                               )}
                               {languagePrefs.showSinhala && (
-                                <p className="text-[#0B4F8A] dark:text-sky-400 font-sinhala">
+                                <p className="text-[#0D7A5F] dark:text-emerald-400 font-sinhala font-medium">
                                   {im.captionSi}
                                 </p>
                               )}
@@ -517,15 +500,16 @@ export function StudyLibraryView({
                     </div>
                   )}
 
-                  {/* Full Extracted Japanese (with Ruby + Romaji) & English Source Text */}
-                  <div className="p-5 sm:p-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  {/* Full 5-Language Page Content (Portrait-First Comfortable Stack) */}
+                  <div className="p-4 sm:p-6 space-y-5">
+                    {/* 1. Original Japanese + Furigana + Romaji */}
                     {(languagePrefs.showJapanese || languagePrefs.showRomaji) && (
                       <div className="space-y-3">
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                          Original Japanese {languagePrefs.showFurigana ? '+ Official JTA Furigana' : ''}
+                        <p className="text-xs font-bold text-[#0B4F8A] dark:text-sky-400">
+                          日本語 {languagePrefs.showFurigana ? '+ ふりがな (Official JTA)' : ''}
                         </p>
                         {pg.japaneseParagraphs.length === 0 ? (
-                          <p className="text-xs text-slate-400 italic">Visual / illustration page</p>
+                          <p className="text-xs text-slate-400 italic">Illustration page</p>
                         ) : (
                           pg.japaneseParagraphs.map((jp, idx) => (
                             <div key={idx} className="space-y-1">
@@ -548,18 +532,42 @@ export function StudyLibraryView({
                       </div>
                     )}
 
-                    {languagePrefs.showEnglish && (
-                      <div className="space-y-3">
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                          Original English Textbook
+                    {/* 2. FULL SINHALA PAGE TRANSLATION */}
+                    {languagePrefs.showSinhala && (
+                      <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/25 border border-emerald-200/70 dark:border-emerald-900/70 space-y-2.5">
+                        <p className="text-xs font-bold text-[#0D7A5F] dark:text-emerald-300">
+                          සිංහල පරිවර්තනය · Sinhala Textbook Translation
                         </p>
-                        {pg.englishParagraphs.length === 0 ? (
-                          <p className="text-xs text-slate-400 italic">Visual / illustration page</p>
-                        ) : (
-                          pg.englishParagraphs.map((enPara, idx) => (
+                        {sinhalaParas.length > 0 ? (
+                          sinhalaParas.map((siPara, idx) => (
                             <p
                               key={idx}
-                              className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed"
+                              className="text-[15px] text-slate-900 dark:text-slate-100 font-sinhala"
+                            >
+                              {siPara}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-sm text-slate-700 dark:text-slate-300 font-sinhala">
+                            {activeSection.sinhalaSummary}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* 3. Original English Textbook */}
+                    {languagePrefs.showEnglish && (
+                      <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                          Original English Textbook
+                        </p>
+                        {cleanEnglish.length === 0 ? (
+                          <p className="text-xs text-slate-400 italic">Illustration page</p>
+                        ) : (
+                          cleanEnglish.map((enPara, idx) => (
+                            <p
+                              key={idx}
+                              className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed"
                             >
                               {enPara}
                             </p>
@@ -569,67 +577,206 @@ export function StudyLibraryView({
                     )}
                   </div>
                 </section>
-              ))}
+              );
+            })}
 
-              {/* Personal Study Notes + Section Navigation Footer */}
-              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="section-personal-note"
-                    className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"
-                  >
-                    <StickyNote className="w-4 h-4 text-[#0B4F8A] dark:text-sky-400" aria-hidden="true" />
-                    <span>Personal Study Notes (Saved Offline)</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={onGoToCbt}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0B4F8A] dark:text-sky-400 hover:underline"
-                  >
-                    <ClipboardCheck className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>Practice CBT Questions</span>
-                  </button>
-                </div>
-                <textarea
-                  id="section-personal-note"
-                  rows={3}
-                  value={noteValue}
-                  onChange={(e) => onSaveSectionNote(activeSection.sectionId, e.target.value)}
-                  placeholder="Write Sinhala / English / Japanese memory notes for this section..."
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 text-sm text-slate-900 dark:text-white font-sinhala focus:outline-none focus:border-[#0B4F8A]"
+            {/* Clean Bottom Lesson Pager + Quick CBT Jump (No Unnecessary Notes Box!) */}
+            <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+              <div className="flex items-center justify-between gap-2.5">
+                <button
+                  type="button"
+                  disabled={currentIdx <= 0}
+                  onClick={() => {
+                    if (currentIdx > 0) selectSection(flatSections[currentIdx - 1].section.sectionId);
+                  }}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 min-h-[46px] tm-card-press whitespace-nowrap"
+                >
+                  <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+                  <span>Previous</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    playFeedbackTone('tap', soundEnabled);
+                    setTopicDrawerOpen(true);
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl min-h-[46px] whitespace-nowrap"
+                >
+                  <BookOpen className="w-4 h-4" aria-hidden="true" />
+                  <span>
+                    {currentIdx + 1}/{flatSections.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={currentIdx < 0 || currentIdx >= flatSections.length - 1}
+                  onClick={() => {
+                    if (currentIdx >= 0 && currentIdx < flatSections.length - 1) {
+                      selectSection(flatSections[currentIdx + 1].section.sectionId);
+                    }
+                  }}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-bold text-white bg-[#0B4F8A] rounded-xl hover:bg-[#083D6B] disabled:opacity-40 min-h-[46px] tm-card-press whitespace-nowrap"
+                >
+                  <span>Next Lesson</span>
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={onGoToCbt}
+                className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-[#0D7A5F] dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition-colors"
+              >
+                <ClipboardCheck className="w-4 h-4" aria-hidden="true" />
+                <span>Practice CBT Quiz Questions (with Sinhala)</span>
+              </button>
+            </section>
+          </>
+        )}
+      </article>
+
+      {/* Portrait-Friendly Slide-Up Topic & Search Drawer */}
+      {topicDrawerOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Browse Chapter Lessons"
+          onClick={() => setTopicDrawerOpen(false)}
+        >
+          <div
+            className="tm-sheet-up sm:tm-modal-pop w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-h-[85vh] flex flex-col overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+                  Browse Lessons &amp; Search
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setTopicDrawerOpen(false)}
+                  aria-label="Close lessons menu"
+                  className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="relative">
+                <Search
+                  className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                  aria-hidden="true"
                 />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search any topic, KYT, Sinhala, or page #..."
+                  className="w-full min-h-[42px] pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#0B4F8A]"
+                />
+              </div>
+            </div>
 
-                <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                  <button
-                    type="button"
-                    disabled={currentIdx <= 0}
-                    onClick={() => {
-                      if (currentIdx > 0) setSectionId(flatSections[currentIdx - 1].section.sectionId);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 min-h-[44px]"
-                  >
-                    <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-                    <span>Previous Section</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={currentIdx < 0 || currentIdx >= flatSections.length - 1}
-                    onClick={() => {
-                      if (currentIdx >= 0 && currentIdx < flatSections.length - 1) {
-                        setSectionId(flatSections[currentIdx + 1].section.sectionId);
-                      }
-                    }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-[#0B4F8A] rounded-xl hover:bg-[#083D6B] disabled:opacity-40 min-h-[44px]"
-                  >
-                    <span>Next Section</span>
-                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                  </button>
-                </div>
-              </section>
-            </>
-          )}
-        </article>
-      </div>
+            <div className="p-4 overflow-y-auto space-y-4 flex-1">
+              {searchQuery.trim() ? (
+                searchResults.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-6">No matching lessons found.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {searchResults.map((res) => (
+                      <button
+                        key={res.sectionId}
+                        type="button"
+                        onClick={() => {
+                          setChapterId(res.chapterId);
+                          setSearchQuery('');
+                          selectSection(res.sectionId);
+                        }}
+                        className="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-[#0B4F8A] bg-slate-50 dark:bg-slate-800/50 space-y-0.5"
+                      >
+                        <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                          Ch.{res.chapterNum} · {res.code} · {res.pages}
+                        </p>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">{res.titleEn}</p>
+                        <p className="text-xs text-[#0D7A5F] dark:text-emerald-400 font-sinhala truncate">
+                          {res.titleSi}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )
+              ) : (
+                chapterData?.topics.map((topic) => (
+                  <div key={topic.topicId} className="space-y-1.5">
+                    <div className="px-1">
+                      <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                        Topic {topic.code} · pp. {topic.startPage}–{topic.endPage}
+                      </p>
+                      <p className="text-xs font-extrabold text-slate-900 dark:text-white">
+                        {topic.titleEn}
+                      </p>
+                      <p className="text-xs text-[#0D7A5F] dark:text-emerald-400 font-sinhala">
+                        {topic.titleSi}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      {topic.sections.map((sec) => {
+                        const active = sec.sectionId === activeSection?.sectionId;
+                        const done = progress.completedSectionIds.includes(sec.sectionId);
+                        const saved = progress.bookmarkedSectionIds.includes(sec.sectionId);
+                        return (
+                          <button
+                            key={sec.sectionId}
+                            type="button"
+                            onClick={() => selectSection(sec.sectionId)}
+                            className={`w-full text-left px-3.5 py-3 rounded-xl border transition-colors flex items-center justify-between gap-2 min-h-[50px] ${
+                              active
+                                ? 'bg-[#0B4F8A] text-white border-[#0B4F8A]'
+                                : 'bg-white dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-[#0B4F8A]'
+                            }`}
+                          >
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold truncate">
+                                <span className="font-mono opacity-80 mr-1.5">{sec.code}</span>
+                                {sec.titleEn}
+                              </p>
+                              <p
+                                className={`text-[11px] truncate mt-0.5 ${
+                                  active ? 'text-sky-100' : 'text-slate-500 dark:text-slate-400'
+                                }`}
+                              >
+                                {sec.titleJa}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {saved && (
+                                <Bookmark
+                                  className={`w-4 h-4 fill-current ${active ? 'text-amber-300' : 'text-amber-500'}`}
+                                  aria-label="Bookmarked"
+                                />
+                              )}
+                              {done && (
+                                <CheckCircle2
+                                  className={`w-4 h-4 ${active ? 'text-emerald-300' : 'text-[#0D7A5F] dark:text-emerald-400'}`}
+                                  aria-label="Completed"
+                                />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Image Zoom Modal */}
       {lightboxImg && (
@@ -640,7 +787,7 @@ export function StudyLibraryView({
           onClick={() => setLightboxImg(null)}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full p-5 space-y-3 border border-slate-200 dark:border-slate-800"
+            className="tm-modal-pop bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full p-5 space-y-3 border border-slate-200 dark:border-slate-800"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-center bg-slate-50 dark:bg-slate-950 rounded-xl p-4">

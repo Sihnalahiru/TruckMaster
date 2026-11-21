@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   BarChart3,
+  Bell,
   BookA,
   BookOpen,
   ClipboardCheck,
@@ -12,9 +13,11 @@ import {
   Moon,
   RefreshCw,
   Settings,
+  Shield,
   ShieldCheck,
   Sun,
   Target,
+  Trophy,
   Truck,
   X,
 } from 'lucide-react';
@@ -29,7 +32,10 @@ import {
   saveUserSettings,
 } from './lib/storage';
 import { playFeedbackTone } from './lib/sound';
+import { evaluateTrophies, getDriverRank, type TrophyDefinition } from './lib/gamification';
 import { OfflineBanner, PWAInstallButton } from './components/PWAControls';
+import { TrophyUnlockModal, XpToastStack, type XpToastItem } from './components/RewardEffects';
+import { DailyTargetReminderToast, DailyTaskPopup } from './components/DailyTaskPopup';
 import { DashboardView } from './views/DashboardView';
 import { StudyLibraryView } from './views/StudyLibraryView';
 import { VocabKanjiView } from './views/VocabKanjiView';
@@ -62,12 +68,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', shortLabel: 'Home', group: 'learn', icon: Home },
+  { id: 'dashboard', label: 'Driver Cab', shortLabel: 'Cab', group: 'learn', icon: Home },
   { id: 'study', label: 'Study Library', shortLabel: 'Study', group: 'learn', icon: BookOpen },
   { id: 'vocabulary', label: 'Vocabulary', shortLabel: 'Vocab', group: 'learn', icon: Languages },
   { id: 'kanji', label: 'Kanji Drills', shortLabel: 'Kanji', group: 'learn', icon: BookA },
   { id: 'flashcards', label: 'Flashcards (SRS)', shortLabel: 'Cards', group: 'learn', icon: Layers },
-  { id: 'cbt', label: 'CBT Exam Centre', shortLabel: 'CBT', group: 'exam', icon: ClipboardCheck },
+  { id: 'cbt', label: 'CBT & Quiz', shortLabel: 'Quiz', group: 'exam', icon: ClipboardCheck },
   { id: 'review', label: 'Review Centre', shortLabel: 'Review', group: 'exam', icon: FileSearch },
   { id: 'analytics', label: 'Analytics', shortLabel: 'Stats', group: 'exam', icon: BarChart3 },
   { id: 'missions', label: 'Daily Missions', shortLabel: 'Missions', group: 'exam', icon: Target },
@@ -115,6 +121,23 @@ export function App() {
   const [examActive, setExamActive] = useState(false);
   const [moreDrawerOpen, setMoreDrawerOpen] = useState(false);
 
+  // Daily Task Login Popup + Periodic Target Reminder Toast
+  const [dailyPopupOpen, setDailyPopupOpen] = useState(false);
+  const [reminderVisible, setReminderVisible] = useState(false);
+
+  // Gamification Effects: Floating XP Toasts & Trophy Celebration Modal
+  const [xpToasts, setXpToasts] = useState<XpToastItem[]>([]);
+  const [celebratingTrophy, setCelebratingTrophy] = useState<TrophyDefinition | null>(null);
+  const unlockedTrophyIdsRef = useRef<Set<string> | null>(null);
+
+  const triggerXpToast = useCallback((xp: number, label: string) => {
+    const id = `xp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    setXpToasts((prev) => [...prev.slice(-2), { id, xp, label }]);
+    window.setTimeout(() => {
+      setXpToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 2700);
+  }, []);
+
   const bootstrap = useCallback(async () => {
     setBootLoading(true);
     setBootError(null);
@@ -127,6 +150,17 @@ export function App() {
       setManifest(m);
       setProgress(p);
       setSettings(s);
+
+      // Snapshot already-unlocked trophies so we only celebrate newly earned ones
+      const initialUnlocked = new Set(
+        evaluateTrophies(p, s)
+          .filter((t) => t.unlocked)
+          .map((t) => t.id),
+      );
+      unlockedTrophyIdsRef.current = initialUnlocked;
+
+      // Open Daily Task popup automatically on every login/app launch
+      setDailyPopupOpen(true);
     } catch (err) {
       setBootError(err instanceof Error ? err.message : 'Unable to load TruckMaster study data.');
     } finally {
@@ -137,6 +171,20 @@ export function App() {
   useEffect(() => {
     bootstrap();
   }, [bootstrap]);
+
+  // Watch for newly unlocked trophies and trigger confetti celebration + fanfare
+  useEffect(() => {
+    if (bootLoading || !unlockedTrophyIdsRef.current) return;
+    const current = evaluateTrophies(progress, settings);
+    for (const trophy of current) {
+      if (trophy.unlocked && !unlockedTrophyIdsRef.current.has(trophy.id)) {
+        unlockedTrophyIdsRef.current.add(trophy.id);
+        setCelebratingTrophy(trophy);
+        playFeedbackTone('trophy', settings.soundEnabled);
+        break;
+      }
+    }
+  }, [progress, settings, bootLoading]);
 
   // Sync theme, font scale, and reduced-motion preferences onto <html>
   useEffect(() => {
@@ -159,6 +207,63 @@ export function App() {
     };
   }, [settings.theme, settings.fontScale, settings.reducedMotion, settings.animationsEnabled]);
 
+  const todayMinutes = useMemo(() => {
+    const today = getTodayKey();
+    return progress.studySessions
+      .filter((s) => s.date === today)
+      .reduce((sum, s) => sum + s.minutes, 0);
+  }, [progress.studySessions]);
+
+  const targetMinutes = Math.max(15, settings.dailyTargetMinutes);
+  const remainingTargetMinutes = Math.max(0, targetMinutes - todayMinutes);
+  const dailyTargetAchieved = remainingTargetMinutes === 0;
+
+  // Periodic Daily Target Reminders (In-App Toast + Browser Notification) until daily target is achieved
+  useEffect(() => {
+    if (bootLoading || dailyTargetAchieved || !settings.notificationsEnabled || examActive) {
+      setReminderVisible(false);
+      return;
+    }
+
+    const fireReminder = () => {
+      if (dailyPopupOpen || examActive) return;
+      setReminderVisible(true);
+      playFeedbackTone('notify', settings.soundEnabled);
+      if (
+        typeof window !== 'undefined' &&
+        'Notification' in window &&
+        Notification.permission === 'granted'
+      ) {
+        try {
+          new Notification('TruckMaster Daily Target Reminder', {
+            body: `${remainingTargetMinutes} minutes remaining to hit today's ${targetMinutes}m SSW study goal!`,
+            icon: '/pwa-192x192.png',
+          });
+        } catch {
+          // Safe fallback if notification constructor is blocked in iframe
+        }
+      }
+    };
+
+    // First reminder 60s after launch/dismissal, then repeat every 5 minutes until target is hit
+    const initialTimer = window.setTimeout(fireReminder, 60_000);
+    const repeatTimer = window.setInterval(fireReminder, 5 * 60_000);
+
+    return () => {
+      window.clearTimeout(initialTimer);
+      window.clearInterval(repeatTimer);
+    };
+  }, [
+    bootLoading,
+    dailyTargetAchieved,
+    dailyPopupOpen,
+    examActive,
+    remainingTargetMinutes,
+    settings.notificationsEnabled,
+    settings.soundEnabled,
+    targetMinutes,
+  ]);
+
   const updateProgress = useCallback(
     (updater: (prev: LearnerProgressState) => LearnerProgressState) => {
       setProgress((prev) => {
@@ -178,22 +283,24 @@ export function App() {
   const handleNavigate = useCallback(
     (nextRoute: AppRoute) => {
       if (examActive) return;
+      playFeedbackTone('nav', settings.soundEnabled);
       setRoute(nextRoute);
       setMoreDrawerOpen(false);
       window.scrollTo({ top: 0, behavior: 'auto' });
     },
-    [examActive],
+    [examActive, settings.soundEnabled],
   );
 
   const handleOpenSection = useCallback(
     (chapterId: string, sectionId: string) => {
       if (examActive) return;
+      playFeedbackTone('nav', settings.soundEnabled);
       setStudyTarget({ chapterId, sectionId });
       setRoute('study');
       setMoreDrawerOpen(false);
       window.scrollTo({ top: 0, behavior: 'auto' });
     },
-    [examActive],
+    [examActive, settings.soundEnabled],
   );
 
   const handleOpenReview = useCallback((attemptId: string) => {
@@ -232,9 +339,14 @@ export function App() {
               ),
         };
       });
-      playFeedbackTone(newlyCompleted ? 'success' : 'tap', settings.soundEnabled);
+      if (newlyCompleted) {
+        triggerXpToast(25, `Completed ${label}`);
+        playFeedbackTone('xp', settings.soundEnabled);
+      } else {
+        playFeedbackTone('tap', settings.soundEnabled);
+      }
     },
-    [settings.soundEnabled, updateProgress],
+    [settings.soundEnabled, triggerXpToast, updateProgress],
   );
 
   const handleToggleSectionBookmark = useCallback(
@@ -251,19 +363,6 @@ export function App() {
       playFeedbackTone('tap', settings.soundEnabled);
     },
     [settings.soundEnabled, updateProgress],
-  );
-
-  const handleSaveSectionNote = useCallback(
-    (sectionId: string, note: string) => {
-      updateProgress((prev) => ({
-        ...prev,
-        sectionNotes: {
-          ...prev.sectionNotes,
-          [sectionId]: note,
-        },
-      }));
-    },
-    [updateProgress],
   );
 
   const handleTrackLastVisited = useCallback(
@@ -327,9 +426,14 @@ export function App() {
               ),
         };
       });
-      playFeedbackTone(added ? 'success' : 'tap', settings.soundEnabled);
+      if (added) {
+        triggerXpToast(10, `Mastered ${label}`);
+        playFeedbackTone('xp', settings.soundEnabled);
+      } else {
+        playFeedbackTone('tap', settings.soundEnabled);
+      }
     },
-    [settings.soundEnabled, updateProgress],
+    [settings.soundEnabled, triggerXpToast, updateProgress],
   );
 
   const handleToggleDifficult = useCallback(
@@ -424,9 +528,10 @@ export function App() {
           ].slice(0, 40),
         };
       });
-      playFeedbackTone(rating === 'again' ? 'tap' : 'success', settings.soundEnabled);
+      triggerXpToast(5, `Flashcard: ${label}`);
+      playFeedbackTone(rating === 'again' ? 'wrong' : 'xp', settings.soundEnabled);
     },
-    [settings.soundEnabled, updateProgress],
+    [settings.soundEnabled, triggerXpToast, updateProgress],
   );
 
   const handleSaveInProgress = useCallback(
@@ -468,9 +573,13 @@ export function App() {
         ].slice(0, 40),
       }));
 
+      triggerXpToast(
+        xpEarned,
+        attempt.overallPassed ? `${attempt.paperTitle} PASSED!` : `${attempt.paperTitle} Submitted`,
+      );
       playFeedbackTone(attempt.overallPassed ? 'celebrate' : 'success', settings.soundEnabled);
     },
-    [settings.soundEnabled, updateProgress],
+    [settings.soundEnabled, triggerXpToast, updateProgress],
   );
 
   const handleToggleQuestionBookmark = useCallback(
@@ -510,8 +619,10 @@ export function App() {
           ...prev.recentActivities,
         ].slice(0, 40),
       }));
+      triggerXpToast(xpEarned, `${cleanMins}m focused study logged`);
+      playFeedbackTone('xp', settings.soundEnabled);
     },
-    [updateProgress],
+    [settings.soundEnabled, triggerXpToast, updateProgress],
   );
 
   const handleToggleChecklistMission = useCallback(
@@ -531,9 +642,14 @@ export function App() {
           },
         };
       });
-      playFeedbackTone(checked ? 'success' : 'tap', settings.soundEnabled);
+      if (checked) {
+        triggerXpToast(15, 'Daily Mission Completed');
+        playFeedbackTone('xp', settings.soundEnabled);
+      } else {
+        playFeedbackTone('tap', settings.soundEnabled);
+      }
     },
-    [settings.soundEnabled, updateProgress],
+    [settings.soundEnabled, triggerXpToast, updateProgress],
   );
 
   const handleRestoreBackup = useCallback(
@@ -572,6 +688,7 @@ export function App() {
         const fresh = { ...DEFAULT_PROGRESS };
         setProgress(fresh);
         void saveLearnerProgress(fresh);
+        unlockedTrophyIdsRef.current = new Set();
         return;
       }
       updateProgress((prev) => {
@@ -594,7 +711,6 @@ export function App() {
             difficultKanjiIds: [],
           };
         }
-        // scope === 'quiz'
         return {
           ...prev,
           examAttempts: [],
@@ -607,6 +723,7 @@ export function App() {
   );
 
   const toggleQuickTheme = useCallback(() => {
+    playFeedbackTone('tap', settings.soundEnabled);
     const isCurrentlyDark = document.documentElement.classList.contains('dark');
     updateSettings({ ...settings, theme: isCurrentlyDark ? 'light' : 'dark' });
   }, [settings, updateSettings]);
@@ -616,24 +733,23 @@ export function App() {
     [route],
   );
 
-  const todayMinutes = useMemo(() => {
-    const today = getTodayKey();
-    return progress.studySessions
-      .filter((s) => s.date === today)
-      .reduce((sum, s) => sum + s.minutes, 0);
-  }, [progress.studySessions]);
+  const { rank, progressPct: rankPct } = useMemo(() => getDriverRank(progress.xp), [progress.xp]);
+  const unlockedTrophyCount = useMemo(
+    () => evaluateTrophies(progress, settings).filter((t) => t.unlocked).length,
+    [progress, settings],
+  );
 
   const isMoreRouteActive = MOBILE_MORE_ROUTES.includes(route);
 
   if (bootLoading) {
     return (
       <div className="min-h-screen bg-[#F5F7FA] dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-[#0B4F8A] text-white flex items-center justify-center mb-4">
-          <Truck className="w-6 h-6" aria-hidden="true" />
+        <div className="w-14 h-14 rounded-2xl bg-[#0B4F8A] text-amber-300 flex items-center justify-center mb-4 shadow-lg">
+          <Truck className="w-7 h-7" aria-hidden="true" />
         </div>
-        <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">TruckMaster</h1>
+        <h1 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">TruckMaster</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Loading Japan SSW Truck Driver study database...
+          Preparing Japan SSW Truck Driver cab &amp; trilingual syllabus...
         </p>
       </div>
     );
@@ -664,33 +780,54 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex">
-      {/* Desktop Fixed Sidebar (Hidden during active CBT Exam Lock) */}
+      {/* Desktop Fixed Truck-Cab Sidebar (Hidden during active Exam) */}
       {!examActive && (
         <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:left-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-30">
-          <div className="h-16 px-5 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">
-            <div className="w-9 h-9 rounded-xl bg-[#0B4F8A] text-white flex items-center justify-center shrink-0">
-              <Truck className="w-5 h-5" aria-hidden="true" />
+          <div className="px-4 py-4 border-b border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#0B4F8A] text-amber-300 flex items-center justify-center shrink-0 shadow-xs">
+                <Truck className="w-5 h-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-slate-100 truncate">
+                  TruckMaster
+                </p>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                  Japan SSW Driver App
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-slate-100 truncate">
-                TruckMaster
-              </p>
-              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
-                Japan SSW Truck CBT
-              </p>
+
+            {/* Compact Driver Rank & EXP Card */}
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/70 space-y-1.5">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-bold text-slate-800 dark:text-slate-100 inline-flex items-center gap-1 truncate">
+                  <Shield className="w-3.5 h-3.5 text-amber-500 shrink-0" aria-hidden="true" />
+                  Lv.{rank.level} {rank.titleEn}
+                </span>
+                <span className="font-mono font-bold text-[#0B4F8A] dark:text-sky-400 tabular-nums shrink-0">
+                  {progress.xp} XP
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                <div
+                  className="h-full bg-amber-500 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.max(rankPct, 5)}%` }}
+                />
+              </div>
             </div>
           </div>
 
           <nav aria-label="Primary navigation" className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
             {(
               [
-                { key: 'learn', title: 'Study Modules' },
-                { key: 'exam', title: 'Exam & Progress' },
-                { key: 'system', title: 'System & QA' },
+                { key: 'learn', title: 'Training Modules' },
+                { key: 'exam', title: 'CBT & Missions' },
+                { key: 'system', title: 'Cab Settings' },
               ] as const
             ).map((section) => (
               <div key={section.key}>
-                <p className="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <p className="px-3 mb-1.5 text-[11px] font-bold tracking-wide text-slate-400 dark:text-slate-500">
                   {section.title}
                 </p>
                 <div className="space-y-0.5">
@@ -702,9 +839,9 @@ export function App() {
                         key={item.id}
                         type="button"
                         onClick={() => handleNavigate(item.id)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap ${
+                        className={`tm-card-press w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap ${
                           active
-                            ? 'bg-[#0B4F8A] text-white'
+                            ? 'bg-[#0B4F8A] text-white shadow-xs'
                             : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
                       >
@@ -714,7 +851,7 @@ export function App() {
                           <span
                             className={`ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded ${
                               active
-                                ? 'bg-white/20 text-white'
+                                ? 'bg-amber-400 text-slate-950'
                                 : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
                             }`}
                           >
@@ -746,7 +883,7 @@ export function App() {
 
       {/* Main Content Shell */}
       <div className={`flex-1 flex flex-col min-w-0 ${!examActive ? 'lg:pl-64' : ''}`}>
-        {/* Mobile Compact Top Header (48px height, hidden in CBT exam lock) */}
+        {/* Mobile Compact Top Bar (48px height, hidden in CBT exam) */}
         {!examActive && (
           <header className="lg:hidden sticky top-0 z-20 h-12 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-3 flex items-center justify-between gap-2">
             <button
@@ -754,18 +891,27 @@ export function App() {
               onClick={() => handleNavigate('dashboard')}
               className="flex items-center gap-2 min-w-0"
             >
-              <div className="w-7 h-7 rounded-lg bg-[#0B4F8A] text-white flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-lg bg-[#0B4F8A] text-amber-300 flex items-center justify-center shrink-0">
                 <Truck className="w-4 h-4" aria-hidden="true" />
               </div>
-              <span className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+              <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate">
                 {currentNav.label}
               </span>
             </button>
 
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-xs font-mono font-semibold text-[#0B4F8A] dark:text-sky-300 tabular-nums px-2">
-                {progress.xp} XP
-              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  playFeedbackTone('tap', settings.soundEnabled);
+                  setDailyPopupOpen(true);
+                }}
+                aria-label="Open Daily Tasks"
+                className="h-9 px-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs font-bold inline-flex items-center gap-1 whitespace-nowrap"
+              >
+                <Bell className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="font-mono tabular-nums">{todayMinutes}m</span>
+              </button>
               <button
                 type="button"
                 onClick={toggleQuickTheme}
@@ -779,7 +925,7 @@ export function App() {
           </header>
         )}
 
-        {/* Desktop Contextual Breadcrumb Top Bar (hidden in CBT exam lock) */}
+        {/* Desktop Contextual Top Bar (hidden in CBT exam) */}
         {!examActive && (
           <header className="hidden lg:flex sticky top-0 z-20 h-14 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-6 items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-sm min-w-0">
@@ -796,30 +942,47 @@ export function App() {
               </span>
             </div>
 
-            <div className="flex items-center gap-4 text-xs font-semibold tabular-nums shrink-0">
-              <span className="text-slate-600 dark:text-slate-300">
-                Today: <strong className="text-slate-900 dark:text-slate-100">{todayMinutes}m</strong> /{' '}
-                {settings.dailyTargetMinutes}m
+            <div className="flex items-center gap-3 text-xs font-semibold tabular-nums shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  playFeedbackTone('tap', settings.soundEnabled);
+                  setDailyPopupOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/60 transition-colors whitespace-nowrap"
+              >
+                <Target className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>
+                  Daily: {todayMinutes}/{targetMinutes}m
+                </span>
+              </button>
+
+              <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 font-mono">
+                <Trophy className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+                {unlockedTrophyCount}/10
               </span>
-              <span className="text-[#0B4F8A] dark:text-sky-300 font-mono">
+
+              <span className="text-[#0B4F8A] dark:text-sky-300 font-mono font-bold">
                 {progress.xp} XP
               </span>
+
               {progress.inProgressExam && route !== 'cbt' && (
                 <button
                   type="button"
                   onClick={() => handleNavigate('cbt')}
-                  className="px-3 py-1.5 rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors whitespace-nowrap"
+                  className="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-colors whitespace-nowrap"
                 >
-                  Resume CBT
+                  Resume Quiz
                 </button>
               )}
             </div>
           </header>
         )}
 
-        {/* Active View Canvas */}
+        {/* Active View Canvas with Smooth Route Enter Transition */}
         <main
-          className={`flex-1 w-full max-w-6xl mx-auto px-3 sm:px-6 ${
+          key={route}
+          className={`tm-view-enter flex-1 w-full max-w-6xl mx-auto px-3 sm:px-6 ${
             examActive ? 'py-4' : 'py-5 pb-24 lg:pb-10'
           }`}
         >
@@ -830,6 +993,10 @@ export function App() {
               settings={settings}
               onNavigate={handleNavigate}
               onOpenSection={handleOpenSection}
+              onOpenDailyPopup={() => {
+                playFeedbackTone('tap', settings.soundEnabled);
+                setDailyPopupOpen(true);
+              }}
             />
           )}
 
@@ -838,12 +1005,12 @@ export function App() {
               manifest={manifest}
               progress={progress}
               languagePrefs={settings.languagePrefs}
+              soundEnabled={settings.soundEnabled}
               initialChapterId={studyTarget.chapterId}
               initialSectionId={studyTarget.sectionId}
               onUpdateLanguagePrefs={handleUpdateLanguagePrefs}
               onToggleSectionComplete={handleToggleSectionComplete}
               onToggleSectionBookmark={handleToggleSectionBookmark}
-              onSaveSectionNote={handleSaveSectionNote}
               onTrackLastVisited={handleTrackLastVisited}
               onGoToCbt={() => handleNavigate('cbt')}
             />
@@ -920,7 +1087,7 @@ export function App() {
         </main>
       </div>
 
-      {/* Mobile Bottom Tab Navigation (60px height, hidden during CBT Exam Lock) */}
+      {/* Mobile Bottom Tab Navigation (60px height, hidden during CBT exam) */}
       {!examActive && (
         <nav
           aria-label="Mobile navigation"
@@ -936,7 +1103,7 @@ export function App() {
                   key={id}
                   type="button"
                   onClick={() => handleNavigate(id)}
-                  className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
+                  className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition-colors ${
                     active
                       ? 'text-[#0B4F8A] dark:text-sky-400'
                       : 'text-slate-500 dark:text-slate-400'
@@ -949,8 +1116,11 @@ export function App() {
             })}
             <button
               type="button"
-              onClick={() => setMoreDrawerOpen((open) => !open)}
-              className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${
+              onClick={() => {
+                playFeedbackTone('tap', settings.soundEnabled);
+                setMoreDrawerOpen((open) => !open);
+              }}
+              className={`flex flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition-colors ${
                 moreDrawerOpen || isMoreRouteActive
                   ? 'text-[#0B4F8A] dark:text-sky-400'
                   : 'text-slate-500 dark:text-slate-400'
@@ -966,25 +1136,31 @@ export function App() {
       {/* Mobile "More" Bottom Sheet Drawer */}
       {!examActive && moreDrawerOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-40 bg-slate-950/60 flex items-end"
+          className="lg:hidden fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs flex items-end"
           role="dialog"
           aria-modal="true"
-          aria-label="More TruckMaster destinations"
+          aria-label="More TruckMaster tools"
           onClick={() => setMoreDrawerOpen(false)}
         >
           <div
-            className="w-full rounded-t-2xl bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 pb-8 space-y-4 max-h-[80vh] overflow-y-auto"
+            className="tm-sheet-up w-full rounded-t-3xl bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 pb-8 space-y-4 max-h-[82vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="w-10 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto" />
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                All Learning Tools
-              </h2>
+              <div>
+                <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                  TruckMaster Cab Menu
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Lv.{rank.level} {rank.titleEn} · {progress.xp} XP · {unlockedTrophyCount}/10 Trophies
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setMoreDrawerOpen(false)}
                 aria-label="Close navigation drawer"
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1000,7 +1176,7 @@ export function App() {
                     key={id}
                     type="button"
                     onClick={() => handleNavigate(id)}
-                    className={`min-h-[48px] px-3.5 py-2.5 rounded-xl border text-left flex items-center gap-2.5 text-sm font-semibold transition-colors ${
+                    className={`tm-card-press min-h-[48px] px-3.5 py-2.5 rounded-xl border text-left flex items-center gap-2.5 text-sm font-semibold transition-colors ${
                       active
                         ? 'bg-[#0B4F8A] border-[#0B4F8A] text-white'
                         : 'bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200'
@@ -1019,6 +1195,46 @@ export function App() {
           </div>
         </div>
       )}
+
+      {/* Daily Task Login Popup Menu */}
+      <DailyTaskPopup
+        open={dailyPopupOpen && !examActive}
+        progress={progress}
+        settings={settings}
+        onClose={() => setDailyPopupOpen(false)}
+        onToggleMission={handleToggleChecklistMission}
+        onNavigate={handleNavigate}
+        onEnableNotifications={() => {
+          if (!settings.notificationsEnabled) {
+            updateSettings({ ...settings, notificationsEnabled: true });
+          }
+        }}
+      />
+
+      {/* Recurring Daily Target Reminder Toast until target is achieved */}
+      {reminderVisible && !dailyPopupOpen && !examActive && !dailyTargetAchieved && (
+        <DailyTargetReminderToast
+          remainingMinutes={remainingTargetMinutes}
+          todayMinutes={todayMinutes}
+          targetMinutes={targetMinutes}
+          onOpenPopup={() => {
+            setReminderVisible(false);
+            setDailyPopupOpen(true);
+          }}
+          onOpenTimer={() => {
+            setReminderVisible(false);
+            handleNavigate('missions');
+          }}
+          onDismiss={() => setReminderVisible(false)}
+        />
+      )}
+
+      {/* Floating EXP Toasts & Trophy Unlock Celebration Modal */}
+      <XpToastStack toasts={xpToasts} />
+      <TrophyUnlockModal
+        trophy={celebratingTrophy}
+        onClose={() => setCelebratingTrophy(null)}
+      />
 
       <OfflineBanner />
     </div>

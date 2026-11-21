@@ -1,16 +1,20 @@
 import {
   ArrowRight,
-  Award,
   BookOpen,
-  CheckCircle2,
   ClipboardCheck,
   Clock,
   Flame,
+  Gauge,
   Layers,
+  Shield,
   Target,
   TrendingUp,
+  Trophy,
+  Truck,
 } from 'lucide-react';
 import { computeStreaks, getTodayKey } from '../lib/storage';
+import { evaluateTrophies, getDriverRank } from '../lib/gamification';
+import { HighwayTruckProgress, TrophyBadgeIcon } from '../components/RewardEffects';
 import type {
   AppRoute,
   ContentManifest,
@@ -24,6 +28,7 @@ interface DashboardViewProps {
   settings: UserSettings;
   onNavigate: (route: AppRoute) => void;
   onOpenSection: (chapterId: string, sectionId: string) => void;
+  onOpenDailyPopup: () => void;
 }
 
 export function DashboardView({
@@ -32,9 +37,13 @@ export function DashboardView({
   settings,
   onNavigate,
   onOpenSection,
+  onOpenDailyPopup,
 }: DashboardViewProps) {
   const today = getTodayKey();
   const { dailyStreak, weeklyStreak } = computeStreaks(progress.studySessions);
+  const { rank, progressPct: rankPct, xpNeeded } = getDriverRank(progress.xp);
+  const trophies = evaluateTrophies(progress, settings);
+  const unlockedTrophiesCount = trophies.filter((t) => t.unlocked).length;
 
   const todayMinutes = progress.studySessions
     .filter((s) => s.date === today)
@@ -56,7 +65,6 @@ export function DashboardView({
     Math.round((todayMinutes / Math.max(1, settings.dailyTargetMinutes)) * 100),
   );
 
-  // Flashcards due today
   const dueFlashcards = Object.values(progress.flashcards).filter((c) => c.dueDate <= today).length;
   const unstartedFlashcards = Math.max(
     0,
@@ -64,7 +72,6 @@ export function DashboardView({
   );
   const flashcardsDueTotal = dueFlashcards + Math.min(settings.dailyFlashcardTarget, unstartedFlashcards);
 
-  // CBT exam aggregates
   const attempts = progress.examAttempts;
   const avgScorePct =
     attempts.length > 0
@@ -74,19 +81,14 @@ export function DashboardView({
       : null;
   const avgTheory =
     attempts.length > 0
-      ? Math.round(
-          (attempts.reduce((s, a) => s + a.theoryCorrect, 0) / attempts.length) * 10,
-        ) / 10
+      ? Math.round((attempts.reduce((s, a) => s + a.theoryCorrect, 0) / attempts.length) * 10) / 10
       : null;
   const avgPractical =
     attempts.length > 0
-      ? Math.round(
-          (attempts.reduce((s, a) => s + a.practicalCorrect, 0) / attempts.length) * 10,
-        ) / 10
+      ? Math.round((attempts.reduce((s, a) => s + a.practicalCorrect, 0) / attempts.length) * 10) / 10
       : null;
   const passedCount = attempts.filter((a) => a.overallPassed).length;
 
-  // Chapter-wise completion & weakest chapter
   const chapterStats = manifest.chapters.map((ch) => {
     const secIds = ch.topics.flatMap((t) => t.sections.map((s) => s.sectionId));
     const done = secIds.filter((id) => progress.completedSectionIds.includes(id)).length;
@@ -111,7 +113,6 @@ export function DashboardView({
     return scoreA - scoreB;
   })[0];
 
-  // Recommended next study section
   let recommendedNext: { chapterId: string; sectionId: string; titleEn: string; titleSi: string; code: string } | null = null;
   for (const ch of manifest.chapters) {
     for (const t of ch.topics) {
@@ -134,117 +135,111 @@ export function DashboardView({
 
   const todayChecklistCount = (progress.dailyChecklist[today] || []).length;
 
-  const achievements = [
-    {
-      id: 'first-section',
-      title: 'First Lesson Complete',
-      unlocked: completedSectionsCount >= 1,
-    },
-    {
-      id: 'ten-vocab',
-      title: '10 Trucking Terms Mastered',
-      unlocked: progress.masteredVocabIds.length >= 10,
-    },
-    {
-      id: 'first-cbt',
-      title: 'First CBT Paper Completed',
-      unlocked: attempts.length >= 1,
-    },
-    {
-      id: 'cbt-pass',
-      title: 'Dual-Section CBT Pass (60%/60%)',
-      unlocked: passedCount >= 1,
-    },
-    {
-      id: 'streak-3',
-      title: '3-Day Focused Study Streak',
-      unlocked: dailyStreak >= 3,
-    },
-    {
-      id: 'hour-4',
-      title: 'Daily 4-Hour Target Hit',
-      unlocked: todayMinutes >= settings.dailyTargetMinutes,
-    },
-  ];
-
   const ringRadius = 36;
   const ringCircumference = 2 * Math.PI * ringRadius;
   const ringOffset = ringCircumference * (1 - dailyTargetPct / 100);
 
   return (
     <div className="space-y-6">
-      {/* Hero Profile & Daily Focus Strip */}
-      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              <span>{settings.learnerName}</span>
-              <span aria-hidden="true" className="mx-2">·</span>
-              <span>特定技能1号 自動車運送業（トラック）</span>
-              <span aria-hidden="true" className="mx-2">·</span>
-              <span className="font-mono tabular-nums text-[#0B4F8A] dark:text-sky-400 font-semibold">
-                {progress.xp} XP
-              </span>
-            </p>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white [text-wrap:balance]">
-              Japan SSW Truck Driver Preparation
-            </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-300 font-sinhala">
-              ජපාන SSW ට්‍රක් රථ රියදුරු විභාගය සඳහා සම්පූර්ණ ත්‍රිභාෂා අධ්‍යයන සහ CBT පුහුණු වේදිකාව
-            </p>
+      {/* Truck Driver Cab Cockpit Hero */}
+      <section className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
+        <div className="bg-gradient-to-br from-slate-900 via-[#0B4F8A] to-slate-900 text-white p-5 sm:p-6 space-y-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-sky-200">
+                <span className="inline-flex items-center gap-1.5 font-bold text-amber-300">
+                  <Shield className="w-3.5 h-3.5" aria-hidden="true" />
+                  Lv.{rank.level} {rank.titleEn}
+                </span>
+                <span aria-hidden="true">·</span>
+                <span>{rank.vehicleClass}</span>
+                <span aria-hidden="true">·</span>
+                <span className="font-mono font-bold tabular-nums text-white">{progress.xp} XP</span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white [text-wrap:balance]">
+                {settings.learnerName} — TruckMaster Cab
+              </h1>
+              <p className="text-sm text-sky-100 font-sinhala">
+                {rank.titleSi} · ජපාන SSW ට්‍රක් රථ රියදුරු අධ්‍යයන සහ CBT පුහුණු මධ්‍යස්ථානය
+              </p>
+
+              {/* EXP Progress to Next License Class */}
+              <div className="max-w-md pt-1 space-y-1">
+                <div className="flex items-center justify-between text-[11px] font-mono text-sky-200 tabular-nums">
+                  <span>Driver License EXP</span>
+                  <span>{xpNeeded > 0 ? `${xpNeeded} XP to Lv.${rank.level + 1}` : 'Max Rank Achieved'}</span>
+                </div>
+                <div className="h-2 rounded-full bg-white/15 overflow-hidden">
+                  <div
+                    className="h-full bg-amber-400 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.max(rankPct, 4)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Daily Focus Speedometer Card */}
+            <div className="flex items-center gap-4 shrink-0 bg-slate-950/45 border border-white/15 rounded-2xl p-4">
+              <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
+                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 84 84" aria-hidden="true">
+                  <circle
+                    cx="42"
+                    cy="42"
+                    r={ringRadius}
+                    fill="none"
+                    stroke="rgba(255,255,255,0.16)"
+                    strokeWidth="7"
+                  />
+                  <circle
+                    cx="42"
+                    cy="42"
+                    r={ringRadius}
+                    fill="none"
+                    stroke="#FBBF24"
+                    strokeWidth="7"
+                    strokeLinecap="round"
+                    strokeDasharray={ringCircumference}
+                    strokeDashoffset={ringOffset}
+                    className="transition-all duration-500"
+                  />
+                </svg>
+                <span className="absolute text-sm font-extrabold font-mono tabular-nums text-white">
+                  {dailyTargetPct}%
+                </span>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-sky-200">Daily Target</p>
+                <p className="text-lg font-extrabold font-mono tabular-nums text-white">
+                  {todayMinutes} / {settings.dailyTargetMinutes}m
+                </p>
+                <div className="flex items-center gap-2 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={onOpenDailyPopup}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-amber-300 hover:text-amber-200 whitespace-nowrap"
+                  >
+                    <Target className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Daily Tasks ({todayChecklistCount}/6)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-5 shrink-0 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4">
-            <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
-              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 84 84" aria-hidden="true">
-                <circle
-                  cx="42"
-                  cy="42"
-                  r={ringRadius}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="7"
-                  className="text-slate-200 dark:text-slate-700"
-                />
-                <circle
-                  cx="42"
-                  cy="42"
-                  r={ringRadius}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="7"
-                  strokeLinecap="round"
-                  strokeDasharray={ringCircumference}
-                  strokeDashoffset={ringOffset}
-                  className="text-[#0B4F8A] dark:text-sky-400 transition-all duration-300"
-                />
-              </svg>
-              <span className="absolute text-sm font-bold font-mono tabular-nums text-slate-900 dark:text-white">
-                {dailyTargetPct}%
-              </span>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Daily Focused Target</p>
-              <p className="text-lg font-bold font-mono tabular-nums text-slate-900 dark:text-white">
-                {todayMinutes} / {settings.dailyTargetMinutes} min
-              </p>
-              <button
-                type="button"
-                onClick={() => onNavigate('missions')}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0B4F8A] dark:text-sky-400 hover:underline"
-              >
-                <Clock className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Open 4-Hour Study Timer</span>
-              </button>
-            </div>
-          </div>
+          {/* Animated Highway Syllabus Tracker */}
+          <HighwayTruckProgress
+            percent={overallStudyPct}
+            leftLabel={`Overall SSW Route (${completedSectionsCount}/${totalSections} lessons)`}
+            rightLabel={`${overallStudyPct}%`}
+          />
         </div>
 
-        {/* 4-Column KPI Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <p className="text-xs text-slate-500 dark:text-slate-400">Streaks</p>
-            <p className="text-xl font-bold font-mono tabular-nums text-slate-900 dark:text-white mt-1 flex items-center gap-1.5">
+        {/* 4-Column Instrument Cluster KPI Row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 sm:p-5 bg-white dark:bg-slate-900">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Convoy Streak</p>
+            <p className="text-xl font-extrabold font-mono tabular-nums text-slate-900 dark:text-white mt-1 flex items-center gap-1.5">
               <Flame className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
               <span>{dailyStreak}d</span>
               <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
@@ -256,19 +251,22 @@ export function DashboardView({
             </p>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <p className="text-xs text-slate-500 dark:text-slate-400">Study Library</p>
-            <p className="text-xl font-bold font-mono tabular-nums text-slate-900 dark:text-white mt-1">
-              {overallStudyPct}%
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Trophies Earned</p>
+            <p className="text-xl font-extrabold font-mono tabular-nums text-slate-900 dark:text-white mt-1 flex items-center gap-1.5">
+              <Trophy className="w-4 h-4 text-amber-500 shrink-0" aria-hidden="true" />
+              <span>
+                {unlockedTrophiesCount}/{trophies.length}
+              </span>
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 tabular-nums">
-              {completedSectionsCount} / {totalSections} sections complete
+              Rank: Lv.{rank.level} · {progress.xp} XP
             </p>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <p className="text-xs text-slate-500 dark:text-slate-400">Lexicon &amp; Flashcards</p>
-            <p className="text-xl font-bold font-mono tabular-nums text-slate-900 dark:text-white mt-1">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Vocab &amp; Kanji</p>
+            <p className="text-xl font-extrabold font-mono tabular-nums text-slate-900 dark:text-white mt-1">
               {progress.masteredVocabIds.length}/{manifest.counts.vocabulary}
               <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1">vocab</span>
             </p>
@@ -277,50 +275,52 @@ export function DashboardView({
             </p>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-            <p className="text-xs text-slate-500 dark:text-slate-400">CBT Exam Average</p>
-            <p className="text-xl font-bold font-mono tabular-nums text-slate-900 dark:text-white mt-1">
-              {avgScorePct !== null ? `${avgScorePct}%` : '—'}
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+            <p className="text-xs text-slate-500 dark:text-slate-400">CBT Exam Avg</p>
+            <p className="text-xl font-extrabold font-mono tabular-nums text-slate-900 dark:text-white mt-1 flex items-center gap-1.5">
+              <Gauge className="w-4 h-4 text-[#0B4F8A] dark:text-sky-400 shrink-0" aria-hidden="true" />
+              <span>{avgScorePct !== null ? `${avgScorePct}%` : '—'}</span>
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 tabular-nums">
               {attempts.length === 0
-                ? 'No attempts yet (15 papers ready)'
-                : `${passedCount}/${attempts.length} passed · T:${avgTheory}/30 P:${avgPractical}/20`}
+                ? '15 papers ready'
+                : `${passedCount}/${attempts.length} passed · T:${avgTheory} P:${avgPractical}`}
             </p>
           </div>
         </div>
       </section>
 
-      {/* Main Split: Chapter Progress + Recommended Next / Weakest / Activity */}
+      {/* Main Split: Chapter Route Progress + Quick Launch / Trophies */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left 7 Cols: 4-Chapter Progress + Recent CBT History */}
+        {/* Left 7 Cols */}
         <div className="lg:col-span-7 space-y-6">
           <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6">
             <div className="flex items-center justify-between gap-4 mb-4">
               <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                  4-Chapter Textbook Mastery
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-[#0B4F8A] dark:text-sky-400" aria-hidden="true" />
+                  <span>4-Chapter Driving Syllabus</span>
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  232 reconciled textbook pages across all official SSW chapters
+                  Full Japanese, Furigana, Romaji, English &amp; Sinhala textbook library
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => onNavigate('study')}
-                className="text-xs font-semibold text-[#0B4F8A] dark:text-sky-400 hover:underline whitespace-nowrap shrink-0"
+                className="text-xs font-bold text-[#0B4F8A] dark:text-sky-400 hover:underline whitespace-nowrap shrink-0"
               >
                 Open Library
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {chapterStats.map(({ chapter, done, total, pct, examAcc, firstSectionId }) => (
                 <button
                   key={chapter.id}
                   type="button"
                   onClick={() => onOpenSection(chapter.id, firstSectionId)}
-                  className="w-full text-left p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-[#0B4F8A] dark:hover:border-sky-500 transition-colors"
+                  className="tm-card-press w-full text-left p-4 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-[#0B4F8A] dark:hover:border-sky-500 transition-colors"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
@@ -330,23 +330,23 @@ export function DashboardView({
                       <p className="text-sm font-bold text-slate-900 dark:text-white truncate mt-0.5">
                         {chapter.titleEn} · {chapter.titleJa}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-sinhala truncate">
+                      <p className="text-xs text-[#0D7A5F] dark:text-emerald-400 font-sinhala truncate">
                         {chapter.titleSi}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-sm font-bold font-mono tabular-nums text-slate-900 dark:text-white">
+                      <p className="text-sm font-extrabold font-mono tabular-nums text-slate-900 dark:text-white">
                         {pct}%
                       </p>
                       <p className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                        {done}/{total} sec
+                        {done}/{total}
                         {examAcc !== null ? ` · CBT ${examAcc}%` : ''}
                       </p>
                     </div>
                   </div>
                   <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-3">
                     <div
-                      className="h-full bg-[#0B4F8A] dark:bg-sky-500 rounded-full transition-all duration-300"
+                      className="h-full bg-gradient-to-r from-[#0B4F8A] to-[#0D7A5F] rounded-full transition-all duration-300"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -355,91 +355,67 @@ export function DashboardView({
             </div>
           </section>
 
-          {/* Recent CBT Exam Pass/Fail History */}
-          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6">
-            <div className="flex items-center justify-between gap-4 mb-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                CBT Exam History
-              </h2>
-              <button
-                type="button"
-                onClick={() => onNavigate('cbt')}
-                className="text-xs font-semibold text-[#0B4F8A] dark:text-sky-400 hover:underline whitespace-nowrap"
-              >
-                All 15 Papers
-              </button>
+          {/* Trophy Cabinet Showcase */}
+          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-amber-500" aria-hidden="true" />
+                  <span>Driver Trophy Cabinet</span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-sinhala">
+                  පාඩම්, වචන, කන්ජි සහ CBT විභාග සම්පූර්ණ කර කුසලාන දිනාගන්න
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold tabular-nums text-amber-600 dark:text-amber-400">
+                {unlockedTrophiesCount}/{trophies.length}
+              </span>
             </div>
 
-            {attempts.length === 0 ? (
-              <div className="py-8 text-center space-y-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl p-5">
-                <ClipboardCheck className="w-8 h-8 text-slate-400 mx-auto" aria-hidden="true" />
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                  No CBT Exam Attempts Yet
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                  Each paper simulates the real 80-minute Japanese-only exam: 30 Theory True/False (min 18/30) and 20 Practical MCQ (min 12/20).
-                </p>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('cbt')}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-[#0B4F8A] rounded-xl hover:bg-[#083D6B] min-h-[44px]"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {trophies.map((trophy) => (
+                <div
+                  key={trophy.id}
+                  className={`p-3.5 rounded-2xl border flex items-center gap-3 transition-colors ${
+                    trophy.unlocked
+                      ? 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/60'
+                      : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 opacity-75'
+                  }`}
                 >
-                  <span>Start Paper 01</span>
-                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                </button>
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {attempts.slice(0, 5).map((att) => (
-                  <div key={att.attemptId} className="py-3 flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                        {att.paperTitle}
+                  <TrophyBadgeIcon tier={trophy.tier} unlocked={trophy.unlocked} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        {trophy.titleEn}
                       </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
-                        Theory {att.theoryCorrect}/30 · Practical {att.practicalCorrect}/20 ·{' '}
-                        {new Date(att.completedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span
-                        className={`text-xs font-bold font-mono tabular-nums ${
-                          att.overallPassed
-                            ? 'text-[#0D7A5F] dark:text-emerald-400'
-                            : 'text-red-600 dark:text-red-400'
-                        }`}
-                      >
-                        {att.overallPassed ? 'PASS' : 'FAIL'} · {att.totalCorrect}/50
+                      <span className="text-[11px] font-mono font-semibold tabular-nums text-slate-500 dark:text-slate-400 shrink-0">
+                        {trophy.progressLabel}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => onNavigate('review')}
-                        className="text-xs font-semibold text-[#0B4F8A] dark:text-sky-400 hover:underline"
-                      >
-                        Review
-                      </button>
                     </div>
+                    <p className="text-[11px] text-[#0D7A5F] dark:text-emerald-400 font-sinhala truncate">
+                      {trophy.titleSi}
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
           </section>
         </div>
 
-        {/* Right 5 Cols: Recommended Next, Quick Launch, Achievements, Recent Activity */}
+        {/* Right 5 Cols */}
         <div className="lg:col-span-5 space-y-6">
           {/* Recommended Next Study Section */}
           <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
-            <p className="text-xs font-semibold text-[#0B4F8A] dark:text-sky-400">
-              Recommended Next Step
+            <p className="text-xs font-bold text-[#0B4F8A] dark:text-sky-400">
+              Next Dispatch Lesson
             </p>
             {recommendedNext ? (
               <>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white">
                     {recommendedNext.code} · {recommendedNext.titleEn}
                   </h2>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 font-sinhala mt-1">
+                  <p className="text-xs text-[#0D7A5F] dark:text-emerald-400 font-sinhala mt-1">
                     {recommendedNext.titleSi}
                   </p>
                 </div>
@@ -448,7 +424,7 @@ export function DashboardView({
                   onClick={() =>
                     onOpenSection(recommendedNext!.chapterId, recommendedNext!.sectionId)
                   }
-                  className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#0B4F8A] rounded-xl hover:bg-[#083D6B] transition-colors"
+                  className="tm-card-press w-full min-h-[46px] inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-[#0B4F8A] rounded-xl hover:bg-[#083D6B] transition-colors"
                 >
                   <BookOpen className="w-4 h-4" aria-hidden="true" />
                   <span>
@@ -467,14 +443,14 @@ export function DashboardView({
               <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-xs text-slate-500 dark:text-slate-400">Priority Focus Area</p>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                     Ch. {weakestChapter.chapter.number}: {weakestChapter.chapter.titleEn}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => onOpenSection(weakestChapter.chapter.id, weakestChapter.firstSectionId)}
-                  className="px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 whitespace-nowrap shrink-0"
+                  className="tm-card-press px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 whitespace-nowrap shrink-0"
                 >
                   Revise
                 </button>
@@ -482,24 +458,28 @@ export function DashboardView({
             )}
           </section>
 
-          {/* Daily Mission & Quick Actions */}
+          {/* Quick Cab Controls */}
           <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                Quick Study Actions
+              <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+                Quick Controls
               </h2>
-              <span className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                Missions {todayChecklistCount}/6
-              </span>
+              <button
+                type="button"
+                onClick={onOpenDailyPopup}
+                className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline"
+              >
+                Daily Checklist ({todayChecklistCount}/6)
+              </button>
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => onNavigate('flashcards')}
-                className="p-3.5 text-left rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-[#0B4F8A] transition-colors"
               >
-                <Layers className="w-4 h-4 text-[#0B4F8A] dark:text-sky-400 mb-2" aria-hidden="true" />
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Flashcards</p>
+                <Layers className="w-5 h-5 text-[#0B4F8A] dark:text-sky-400 mb-2" aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">Flashcards</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
                   {flashcardsDueTotal} ready
                 </p>
@@ -507,19 +487,19 @@ export function DashboardView({
               <button
                 type="button"
                 onClick={() => onNavigate('cbt')}
-                className="p-3.5 text-left rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-[#0D7A5F] transition-colors"
               >
-                <ClipboardCheck className="w-4 h-4 text-[#0D7A5F] dark:text-emerald-400 mb-2" aria-hidden="true" />
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">CBT Exam</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">15 full papers</p>
+                <ClipboardCheck className="w-5 h-5 text-[#0D7A5F] dark:text-emerald-400 mb-2" aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">CBT Quiz</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">15 papers · Sinhala</p>
               </button>
               <button
                 type="button"
                 onClick={() => onNavigate('missions')}
-                className="p-3.5 text-left rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 transition-colors"
               >
-                <Target className="w-4 h-4 text-amber-600 dark:text-amber-400 mb-2" aria-hidden="true" />
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">4h Missions</p>
+                <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400 mb-2" aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">Focus Timer</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
                   {todayMinutes}m today
                 </p>
@@ -527,63 +507,96 @@ export function DashboardView({
               <button
                 type="button"
                 onClick={() => onNavigate('analytics')}
-                className="p-3.5 text-left rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+                className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 transition-colors"
               >
-                <TrendingUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400 mb-2" aria-hidden="true" />
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">Analytics</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Real trends</p>
+                <TrendingUp className="w-5 h-5 text-sky-600 dark:text-sky-400 mb-2" aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">Analytics</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Score trends</p>
               </button>
             </div>
           </section>
 
-          {/* Achievement Badges */}
+          {/* Recent CBT Exam History */}
           <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">Achievements</h2>
-              <span className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                {achievements.filter((a) => a.unlocked).length}/{achievements.length}
-              </span>
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+                Recent CBT Results
+              </h2>
+              <button
+                type="button"
+                onClick={() => onNavigate('cbt')}
+                className="text-xs font-bold text-[#0B4F8A] dark:text-sky-400 hover:underline whitespace-nowrap"
+              >
+                All 15 Papers
+              </button>
             </div>
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {achievements.map((badge) => (
-                <div key={badge.id} className="py-2.5 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {badge.unlocked ? (
-                      <CheckCircle2 className="w-4 h-4 text-[#0D7A5F] dark:text-emerald-400 shrink-0" aria-hidden="true" />
-                    ) : (
-                      <Award className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0" aria-hidden="true" />
-                    )}
-                    <span
-                      className={`text-xs truncate ${
-                        badge.unlocked
-                          ? 'font-semibold text-slate-900 dark:text-white'
-                          : 'text-slate-500 dark:text-slate-400'
-                      }`}
-                    >
-                      {badge.title}
-                    </span>
+
+            {attempts.length === 0 ? (
+              <div className="py-6 text-center space-y-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-4">
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  Ready for Your First CBT Paper?
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-sinhala">
+                  සිංහල, ඉංග්‍රීසි සහ ජපන් භාෂාවලින් CBT ප්‍රශ්න පත්‍ර පුහුණු වන්න.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('cbt')}
+                  className="tm-card-press inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-[#0B4F8A] rounded-xl hover:bg-[#083D6B] min-h-[40px]"
+                >
+                  <span>Start Paper 01</span>
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </button>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {attempts.slice(0, 4).map((att) => (
+                  <div key={att.attemptId} className="py-2.5 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                        {att.paperTitle}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+                        T {att.theoryCorrect}/30 · P {att.practicalCorrect}/20
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2.5 shrink-0">
+                      <span
+                        className={`text-xs font-bold font-mono tabular-nums ${
+                          att.overallPassed
+                            ? 'text-[#0D7A5F] dark:text-emerald-400'
+                            : 'text-red-600 dark:text-red-400'
+                        }`}
+                      >
+                        {att.overallPassed ? 'PASS' : 'FAIL'} · {att.totalCorrect}/50
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => onNavigate('review')}
+                        className="text-xs font-bold text-[#0B4F8A] dark:text-sky-400 hover:underline"
+                      >
+                        Review
+                      </button>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-mono text-slate-400 shrink-0">
-                    {badge.unlocked ? 'Unlocked' : 'Locked'}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Recent Activity Log */}
           <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-3">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">Recent Activity</h2>
+            <h2 className="text-base font-extrabold text-slate-900 dark:text-white">Recent EXP Log</h2>
             {progress.recentActivities.length === 0 ? (
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Your completed study sections, flashcard reviews, timer sessions, and CBT exams will appear here.
+                Complete a lesson, flashcard, study session, or CBT paper to earn EXP and unlock driver ranks.
               </p>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {progress.recentActivities.slice(0, 6).map((ev) => (
+                {progress.recentActivities.slice(0, 5).map((ev) => (
                   <div key={ev.id} className="py-2 flex items-center justify-between gap-3 text-xs">
                     <span className="text-slate-700 dark:text-slate-300 truncate">{ev.label}</span>
-                    <span className="font-mono tabular-nums text-[#0D7A5F] dark:text-emerald-400 shrink-0">
+                    <span className="font-mono font-bold tabular-nums text-[#0D7A5F] dark:text-emerald-400 shrink-0">
                       +{ev.xp} XP
                     </span>
                   </div>

@@ -25,7 +25,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
     showEnglish: true,
     showSinhala: true,
   },
-  notificationsEnabled: false,
+  notificationsEnabled: true,
 };
 
 export const DEFAULT_PROGRESS: LearnerProgressState = {
