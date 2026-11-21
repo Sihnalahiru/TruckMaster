@@ -1,0 +1,706 @@
+import { useEffect, useRef, useState } from 'react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Flag,
+  Grid,
+  Play,
+  Send,
+} from 'lucide-react';
+import { loadPaper } from '../lib/contentLoader';
+import { ResilientImage } from '../components/ResilientImage';
+import { RubyText } from '../components/RubyText';
+import type {
+  CbtAttemptRecord,
+  CbtPaper,
+  ContentManifest,
+  InProgressExamState,
+  LearnerProgressState,
+  UserSettings,
+} from '../types/truckmaster';
+
+interface CbtExamCenterViewProps {
+  manifest: ContentManifest;
+  progress: LearnerProgressState;
+  settings: UserSettings;
+  onSaveInProgress: (state: InProgressExamState | null) => void;
+  onSubmitAttempt: (attempt: CbtAttemptRecord) => void;
+  onOpenReview: (attemptId: string) => void;
+  onExamActiveChange: (active: boolean) => void;
+}
+
+function formatTime(totalSeconds: number): string {
+  const safe = Math.max(0, totalSeconds);
+  const mins = Math.floor(safe / 60);
+  const secs = safe % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+export function CbtExamCenterView({
+  manifest,
+  progress,
+  settings,
+  onSaveInProgress,
+  onSubmitAttempt,
+  onOpenReview,
+  onExamActiveChange,
+}: CbtExamCenterViewProps) {
+  const [activePaper, setActivePaper] = useState<CbtPaper | null>(null);
+  const [loadingPaperId, setLoadingPaperId] = useState<string | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [flaggedIds, setFlaggedIds] = useState<string[]>([]);
+  const [remainingSeconds, setRemainingSeconds] = useState(4800);
+  const [startedAt, setStartedAt] = useState<string>('');
+  const [showGridModal, setShowGridModal] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [transitionLock, setTransitionLock] = useState(false);
+
+  const submittedRef = useRef(false);
+  const autoNextTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    onExamActiveChange(Boolean(activePaper));
+    return () => {
+      onExamActiveChange(false);
+      if (autoNextTimerRef.current) window.clearTimeout(autoNextTimerRef.current);
+    };
+  }, [activePaper]);
+
+  // Countdown timer + autosave while active
+  useEffect(() => {
+    if (!activePaper) return;
+    const interval = window.setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          window.clearInterval(interval);
+          if (!submittedRef.current) {
+            finalizeSubmission(activePaper, answers, flaggedIds, 0);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, [activePaper, answers, flaggedIds]);
+
+  // Autosave progress snapshot to IndexedDB
+  useEffect(() => {
+    if (!activePaper || submittedRef.current) return;
+    onSaveInProgress({
+      paperId: activePaper.paperId,
+      currentIndex,
+      answers,
+      flaggedIds,
+      remainingSeconds,
+      startedAt,
+    });
+  }, [activePaper?.paperId, currentIndex, answers, flaggedIds, Math.floor(remainingSeconds / 10)]);
+
+  const startOrResumePaper = async (paperId: string, resumeState?: InProgressExamState | null) => {
+    setLoadingPaperId(paperId);
+    submittedRef.current = false;
+    try {
+      const paper = await loadPaper(paperId);
+      setActivePaper(paper);
+      if (resumeState && resumeState.paperId === paperId) {
+        setCurrentIndex(resumeState.currentIndex);
+        setAnswers(resumeState.answers);
+        setFlaggedIds(resumeState.flaggedIds);
+        setRemainingSeconds(resumeState.remainingSeconds);
+        setStartedAt(resumeState.startedAt);
+      } else {
+        setCurrentIndex(0);
+        setAnswers({});
+        setFlaggedIds([]);
+        setRemainingSeconds(paper.durationSeconds);
+        setStartedAt(new Date().toISOString());
+      }
+      setShowGridModal(false);
+      setShowSubmitModal(false);
+    } finally {
+      setLoadingPaperId(null);
+    }
+  };
+
+  const finalizeSubmission = (
+    paper: CbtPaper,
+    finalAnswers: Record<string, string>,
+    finalFlags: string[],
+    remSecs: number,
+  ) => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
+    if (autoNextTimerRef.current) window.clearTimeout(autoNextTimerRef.current);
+
+    let theoryCorrect = 0;
+    let practicalCorrect = 0;
+    const chapterStats: Record<string, { correct: number; total: number }> = {};
+
+    for (const q of paper.questions) {
+      if (!chapterStats[q.chapterId]) chapterStats[q.chapterId] = { correct: 0, total: 0 };
+      chapterStats[q.chapterId].total++;
+      const isRight = finalAnswers[q.questionId] === q.correctAnswer;
+      if (isRight) {
+        chapterStats[q.chapterId].correct++;
+        if (q.section === 'A') theoryCorrect++;
+        else practicalCorrect++;
+      }
+    }
+
+    const theoryPassed = theoryCorrect >= paper.sectionAPassMin;
+    const practicalPassed = practicalCorrect >= paper.sectionBPassMin;
+    const attempt: CbtAttemptRecord = {
+      attemptId: `att-${Date.now()}`,
+      paperId: paper.paperId,
+      paperTitle: paper.titleEn,
+      completedAt: new Date().toISOString(),
+      durationSecondsTaken: Math.max(1, paper.durationSeconds - remSecs),
+      answers: finalAnswers,
+      flaggedIds: finalFlags,
+      theoryCorrect,
+      theoryTotal: paper.sectionACount,
+      theoryPassed,
+      practicalCorrect,
+      practicalTotal: paper.sectionBCount,
+      practicalPassed,
+      totalCorrect: theoryCorrect + practicalCorrect,
+      totalQuestions: paper.totalQuestions,
+      overallPassed: theoryPassed && practicalPassed,
+      chapterStats,
+    };
+
+    onSaveInProgress(null);
+    onSubmitAttempt(attempt);
+    setActivePaper(null);
+    onOpenReview(attempt.attemptId);
+  };
+
+  // -------------------------------------------------------------------------
+  // ACTIVE EXAM INTERFACE — STRICT JAPANESE + FURIGANA ONLY
+  // -------------------------------------------------------------------------
+  if (activePaper) {
+    const question = activePaper.questions[currentIndex];
+    const selected = answers[question.questionId];
+    const isFlagged = flaggedIds.includes(question.questionId);
+    const answeredCount = Object.keys(answers).length;
+    const unansweredCount = activePaper.totalQuestions - answeredCount;
+    const secAAnswered = activePaper.questions
+      .slice(0, 30)
+      .filter((q) => Boolean(answers[q.questionId])).length;
+    const secBAnswered = activePaper.questions
+      .slice(30)
+      .filter((q) => Boolean(answers[q.questionId])).length;
+
+    const handleSelectAnswer = (optionId: string) => {
+      if (transitionLock || submittedRef.current) return;
+      setAnswers((prev) => ({ ...prev, [question.questionId]: optionId }));
+
+      if (settings.autoNextInCbt && currentIndex < activePaper.totalQuestions - 1) {
+        setTransitionLock(true);
+        if (autoNextTimerRef.current) window.clearTimeout(autoNextTimerRef.current);
+        autoNextTimerRef.current = window.setTimeout(() => {
+          setCurrentIndex((idx) => Math.min(activePaper.totalQuestions - 1, idx + 1));
+          setTransitionLock(false);
+        }, 280);
+      }
+    };
+
+    const toggleFlag = () => {
+      setFlaggedIds((prev) =>
+        prev.includes(question.questionId)
+          ? prev.filter((id) => id !== question.questionId)
+          : [...prev, question.questionId],
+      );
+    };
+
+    return (
+      <div className="space-y-5 max-w-6xl mx-auto">
+        {/* Japanese-Only Exam Top Bar */}
+        <header className="bg-slate-900 text-white rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <p className="text-xs text-slate-300 font-jp">
+              {activePaper.titleJa} ·{' '}
+              {question.section === 'A' ? '学科（正誤問題 1〜30）' : '実技・判断（選択問題 31〜50）'}
+            </p>
+            <p className="text-sm font-bold font-mono tabular-nums">
+              問 {question.questionNumber} / {activePaper.totalQuestions}
+              <span className="text-slate-400 font-normal ml-3">
+                解答済 {answeredCount} · 未解答 {unansweredCount} · 見直し {flaggedIds.length}
+              </span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <div
+              className={`px-3.5 py-2 rounded-xl font-mono text-sm font-bold tabular-nums flex items-center gap-2 ${
+                remainingSeconds < 600
+                  ? 'bg-red-600 text-white'
+                  : 'bg-slate-800 text-sky-300'
+              }`}
+              aria-label="残り時間"
+            >
+              <Clock className="w-4 h-4" aria-hidden="true" />
+              <span>{formatTime(remainingSeconds)}</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowGridModal(true)}
+              className="lg:hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold min-h-[40px]"
+            >
+              <Grid className="w-4 h-4" aria-hidden="true" />
+              <span>一覧</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowSubmitModal(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0D7A5F] hover:bg-[#09604B] text-white text-xs font-bold min-h-[40px] whitespace-nowrap"
+            >
+              <Send className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>試験終了・提出</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Main Exam Grid: Question Stage (8 cols) + Desktop Question Navigator (4 cols) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <section className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-7 space-y-6">
+            <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="text-xs font-mono text-slate-500 dark:text-slate-400">
+                {question.section === 'A' ? '第1部 学科（○×）' : '第2部 実技（4択）'} · 問題番号 {question.questionNumber}
+              </div>
+              <button
+                type="button"
+                onClick={toggleFlag}
+                aria-pressed={isFlagged}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border min-h-[38px] ${
+                  isFlagged
+                    ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-400 text-amber-800 dark:text-amber-300'
+                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Flag className={`w-3.5 h-3.5 ${isFlagged ? 'fill-current' : ''}`} aria-hidden="true" />
+                <span>{isFlagged ? '見直し中' : 'あとで見直す'}</span>
+              </button>
+            </div>
+
+            {/* Original Question Image (Uncropped) */}
+            {question.imageSrc && (
+              <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-center">
+                <ResilientImage
+                  src={question.imageSrc}
+                  alt={`問${question.questionNumber}の図`}
+                  loading="eager"
+                  className="max-h-72 sm:max-h-80 w-auto object-contain rounded"
+                />
+              </div>
+            )}
+
+            {/* Japanese Question Stem + Accurate Furigana ONLY */}
+            <div className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white leading-loose">
+              <RubyText markup={question.japaneseRuby} showFurigana />
+            </div>
+
+            {/* Japanese Answer Options ONLY */}
+            <div
+              className={`grid gap-3 ${
+                question.type === 'TRUE_FALSE' ? 'grid-cols-2' : 'grid-cols-1'
+              }`}
+              role="radiogroup"
+              aria-label={`問${question.questionNumber}の選択肢`}
+            >
+              {question.options.map((opt) => {
+                const isChosen = selected === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={isChosen}
+                    disabled={transitionLock}
+                    onClick={() => handleSelectAnswer(opt.id)}
+                    className={`w-full text-left p-4 rounded-2xl border-2 transition-colors min-h-[58px] flex items-start gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0B4F8A] ${
+                      isChosen
+                        ? 'border-[#0B4F8A] bg-sky-50/80 dark:bg-sky-950/50 text-slate-900 dark:text-white'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 text-slate-800 dark:text-slate-100'
+                    }`}
+                  >
+                    {question.type === 'MULTIPLE_CHOICE' && (
+                      <span className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-bold flex items-center justify-center shrink-0 mt-1">
+                        {opt.id}
+                      </span>
+                    )}
+                    <span
+                      className={`flex-1 leading-loose ${
+                        question.type === 'TRUE_FALSE'
+                          ? 'text-center text-lg font-bold'
+                          : 'text-sm sm:text-base'
+                      }`}
+                    >
+                      <RubyText markup={opt.ruby} showFurigana />
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Previous / Next Controls */}
+            <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                disabled={currentIndex === 0}
+                onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 min-h-[44px]"
+              >
+                <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+                <span>前の問題</span>
+              </button>
+
+              {currentIndex < activePaper.totalQuestions - 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setCurrentIndex((i) => Math.min(activePaper.totalQuestions - 1, i + 1))}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white bg-[#0B4F8A] rounded-xl hover:bg-[#083D6B] min-h-[44px]"
+                >
+                  <span>次の問題</span>
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowSubmitModal(true)}
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white bg-[#0D7A5F] rounded-xl hover:bg-[#09604B] min-h-[44px]"
+                >
+                  <span>解答を提出する</span>
+                </button>
+              )}
+            </div>
+          </section>
+
+          {/* Desktop Question Navigation Grid (4 cols) */}
+          <aside className="hidden lg:block lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
+            <div className="space-y-1">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">問題番号一覧</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums">
+                学科 {secAAnswered}/30 · 実技 {secBAnswered}/20
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                  学科（1〜30）
+                </p>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {activePaper.questions.slice(0, 30).map((q, idx) => {
+                    const isCur = idx === currentIndex;
+                    const done = Boolean(answers[q.questionId]);
+                    const flg = flaggedIds.includes(q.questionId);
+                    return (
+                      <button
+                        key={q.questionId}
+                        type="button"
+                        onClick={() => setCurrentIndex(idx)}
+                        className={`h-9 rounded-lg text-xs font-mono font-semibold tabular-nums border relative transition-colors ${
+                          isCur
+                            ? 'bg-[#0B4F8A] text-white border-[#0B4F8A]'
+                            : flg
+                              ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-400'
+                              : done
+                                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-[#0D7A5F] dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        {q.questionNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                  実技・判断（31〜50）
+                </p>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {activePaper.questions.slice(30).map((q, offset) => {
+                    const idx = 30 + offset;
+                    const isCur = idx === currentIndex;
+                    const done = Boolean(answers[q.questionId]);
+                    const flg = flaggedIds.includes(q.questionId);
+                    return (
+                      <button
+                        key={q.questionId}
+                        type="button"
+                        onClick={() => setCurrentIndex(idx)}
+                        className={`h-9 rounded-lg text-xs font-mono font-semibold tabular-nums border transition-colors ${
+                          isCur
+                            ? 'bg-[#0B4F8A] text-white border-[#0B4F8A]'
+                            : flg
+                              ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-400'
+                              : done
+                                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-[#0D7A5F] dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        {q.questionNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+              <span>緑：解答済</span>
+              <span>黄：見直し</span>
+              <span>白：未解答</span>
+            </div>
+          </aside>
+        </div>
+
+        {/* Mobile Question Grid Modal */}
+        {showGridModal && (
+          <div
+            className="fixed inset-0 z-50 bg-slate-950/70 flex items-end sm:items-center justify-center p-4"
+            onClick={() => setShowGridModal(false)}
+          >
+            <div
+              className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-5 space-y-4 max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">問題番号一覧（50問）</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowGridModal(false)}
+                  className="text-xs font-semibold text-slate-500 px-2 py-1"
+                >
+                  閉じる
+                </button>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {activePaper.questions.map((q, idx) => {
+                  const isCur = idx === currentIndex;
+                  const done = Boolean(answers[q.questionId]);
+                  const flg = flaggedIds.includes(q.questionId);
+                  return (
+                    <button
+                      key={q.questionId}
+                      type="button"
+                      onClick={() => {
+                        setCurrentIndex(idx);
+                        setShowGridModal(false);
+                      }}
+                      className={`h-11 rounded-xl text-xs font-mono font-bold tabular-nums border ${
+                        isCur
+                          ? 'bg-[#0B4F8A] text-white border-[#0B4F8A]'
+                          : flg
+                            ? 'bg-amber-50 text-amber-800 border-amber-400'
+                            : done
+                              ? 'bg-emerald-50 text-[#0D7A5F] border-emerald-300'
+                              : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      {q.questionNumber}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Submit Confirmation Modal */}
+        {showSubmitModal && (
+          <div
+            className="fixed inset-0 z-50 bg-slate-950/75 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                解答を提出しますか？
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300 font-mono tabular-nums">
+                解答済：{answeredCount}/50 · 未解答：{unansweredCount} · 見直し：{flaggedIds.length}
+              </p>
+              {unansweredCount > 0 && (
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  未解答の問題が {unansweredCount} 問残っています。提出後に解説（日本語・英語・シンハラ語）が表示されます。
+                </p>
+              )}
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSubmitModal(false)}
+                  className="px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-xl min-h-[44px]"
+                >
+                  試験に戻る
+                </button>
+                <button
+                  type="button"
+                  onClick={() => finalizeSubmission(activePaper, answers, flaggedIds, remainingSeconds)}
+                  className="px-5 py-2.5 text-sm font-bold text-white bg-[#0D7A5F] hover:bg-[#09604B] rounded-xl min-h-[44px]"
+                >
+                  提出して採点する
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // PAPER DIRECTORY (PAPER 01 – PAPER 15)
+  // -------------------------------------------------------------------------
+  return (
+    <div className="space-y-6">
+      <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="space-y-1">
+            <p className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
+              <span>15 Practice Papers</span>
+              <span aria-hidden="true" className="mx-2">·</span>
+              <span>750 Unique Textbook-Sourced Questions</span>
+              <span aria-hidden="true" className="mx-2">·</span>
+              <span>80 Minutes / Paper</span>
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+              CBT Examination Centre · CBT模擬試験センター
+            </h1>
+            <p className="text-sm text-slate-600 dark:text-slate-300 font-sinhala">
+              සැබෑ ජපන් CBT විභාග ආකෘතිය: A කොටස (න්‍යාය 30න් 18+) සහ B කොටස (ප්‍රායෝගික 20න් 12+) යන දෙකම වෙන වෙනම 60% සමත් විය යුතුය.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <p className="font-bold text-slate-900 dark:text-white">Section A — Theory (学科)</p>
+            <p className="text-slate-600 dark:text-slate-400 mt-0.5 font-mono tabular-nums">
+              30 True / False · Min Pass: 18/30 (60%)
+            </p>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <p className="font-bold text-slate-900 dark:text-white">Section B — Practical (実技)</p>
+            <p className="text-slate-600 dark:text-slate-400 mt-0.5 font-mono tabular-nums">
+              20 Multiple Choice · Min Pass: 12/20 (60%)
+            </p>
+          </div>
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <p className="font-bold text-slate-900 dark:text-white">Japanese-Only Exam Lock</p>
+            <p className="text-slate-600 dark:text-slate-400 mt-0.5">
+              Japanese + Furigana only during exam; Sinhala &amp; English unlock in Review Centre.
+            </p>
+          </div>
+        </div>
+
+        {progress.inProgressExam && (
+          <div className="p-4 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-[#0B4F8A] dark:text-sky-300">
+                Unfinished Exam Saved: {progress.inProgressExam.paperId.toUpperCase()}
+              </p>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-mono tabular-nums">
+                {Object.keys(progress.inProgressExam.answers).length}/50 answered ·{' '}
+                {formatTime(progress.inProgressExam.remainingSeconds)} remaining
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onSaveInProgress(null)}
+                className="px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:underline"
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  startOrResumePaper(progress.inProgressExam!.paperId, progress.inProgressExam)
+                }
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-[#0B4F8A] rounded-xl min-h-[40px]"
+              >
+                <Play className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Resume Exam</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* 15 Practice Papers Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {manifest.papers.map((paper) => {
+          const paperAttempts = progress.examAttempts.filter((a) => a.paperId === paper.paperId);
+          const latest = paperAttempts[0];
+          const passedEver = paperAttempts.some((a) => a.overallPassed);
+          const isLoading = loadingPaperId === paper.paperId;
+
+          return (
+            <article
+              key={paper.paperId}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col justify-between gap-4"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-mono text-slate-500 dark:text-slate-400">
+                  <span>Paper {String(paper.paperNumber).padStart(2, '0')} · 80 min</span>
+                  {passedEver && (
+                    <span className="inline-flex items-center gap-1 text-[#0D7A5F] dark:text-emerald-400 font-semibold">
+                      <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      Passed
+                    </span>
+                  )}
+                </div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                  {paper.titleEn} · {paper.titleJa}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-sinhala">
+                  {paper.titleSi}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono tabular-nums pt-1">
+                  30 Theory · 20 Practical · {paper.imageQuestionsCount} visual items
+                </p>
+              </div>
+
+              <div className="space-y-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                {latest && (
+                  <div className="flex items-center justify-between text-xs font-mono tabular-nums">
+                    <span className="text-slate-500 dark:text-slate-400">
+                      Last: T {latest.theoryCorrect}/30 · P {latest.practicalCorrect}/20
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onOpenReview(latest.attemptId)}
+                      className="font-sans font-semibold text-[#0B4F8A] dark:text-sky-400 hover:underline"
+                    >
+                      Review
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  disabled={Boolean(loadingPaperId)}
+                  onClick={() => startOrResumePaper(paper.paperId)}
+                  className="w-full min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#0B4F8A] rounded-xl hover:bg-[#083D6B] disabled:opacity-50 transition-colors"
+                >
+                  <Play className="w-4 h-4" aria-hidden="true" />
+                  <span>{isLoading ? 'Loading Paper...' : latest ? 'Retake CBT Paper' : 'Start CBT Paper'}</span>
+                </button>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

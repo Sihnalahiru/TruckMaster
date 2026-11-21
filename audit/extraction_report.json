@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-11-21T18:00:44.027Z",
+  "totalSourcePdfPages": 482,
+  "verifiedPages": 481,
+  "pendingPages": 0,
+  "needsReviewPages": 1,
+  "failedPages": 0,
+  "totalStudySections": 62,
+  "totalJapaneseParagraphs": 1209,
+  "totalEnglishParagraphs": 1533,
+  "rubyFuriganaExtracted": true,
+  "flaggedPages": [
+    {
+      "pageRecordId": "ja-p242",
+      "printedPage": 232,
+      "reason": "Low text / diagram-only or separator page"
+    }
+  ]
+}

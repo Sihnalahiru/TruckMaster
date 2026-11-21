@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-11-21T18:00:43.978Z",
+  "repositoryRoot": "/",
+  "figmaReferencesAvailable": false,
+  "figmaLimitationNote": "No BahasaKu .fig, exported PDF, or PNG screen references were uploaded in the repository. Built a provisional unified TruckMaster design system without claiming Figma fidelity.",
+  "documents": [
+    {
+      "docId": "en-book",
+      "path": "data/ssw_truck driving English test book.pdf",
+      "language": "en",
+      "sizeBytes": 9307525,
+      "sha256": "0632ebcba70d9354a818df523045fc53e314a5f973ec5155d053dacc407bc941",
+      "actualPdfPages": 240,
+      "frontMatterPages": 9,
+      "printedBodyPageRange": "1-231",
+      "embeddedImageOps": 228,
+      "status": "VERIFIED"
+    },
+    {
+      "docId": "ja-book",
+      "path": "data/ssw_truck driving japnese test book.pdf",
+      "language": "ja",
+      "sizeBytes": 8961241,
+      "sha256": "357da049a4a8448255d1339fc1220aeeffd9dd2e4d0cf42c2101dbd1258d1f6f",
+      "actualPdfPages": 242,
+      "frontMatterPages": 10,
+      "printedBodyPageRange": "1-232",
+      "embeddedImageOps": 222,
+      "status": "VERIFIED"
+    }
+  ],
+  "reconciliation": {
+    "expectedOwnerTargetPages": 240,
+    "actualEnglishPdfPages": 240,
+    "actualJapanesePdfPages": 242,
+    "totalCombinedSourcePdfPages": 482,
+    "uniqueReconciledPrintedPages": 232,
+    "overlappingPrintedPages": 231,
+    "japaneseOnlyPrintedPages": [
+      232
+    ],
+    "offsetRule": "English PDF page = printedPage + 9; Japanese PDF page = printedPage + 10"
+  },
+  "imageDirectory": {
+    "path": "data/images/",
+    "totalImageFiles": 226,
+    "missingSequentialIndices": [
+      11
+    ],
+    "duplicateChecksumCount": 0
+  }
+}

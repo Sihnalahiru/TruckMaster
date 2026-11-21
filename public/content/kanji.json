@@ -1,0 +1,1178 @@
+[
+  {
+    "id": "knj-001",
+    "character": "運",
+    "onyomi": "ウン",
+    "kunyomi": "はこ(ぶ)",
+    "romaji": "un / hakobu",
+    "english": "Carry, transport, drive",
+    "sinhala": "ප්‍රවාහනය කිරීම / ධාවනය කිරීම",
+    "examples": [
+      {
+        "word": "運転",
+        "reading": "うんてん",
+        "en": "Driving",
+        "si": "රිය පැදවීම"
+      },
+      {
+        "word": "運行",
+        "reading": "うんこう",
+        "en": "Operation",
+        "si": "මෙහෙයුම"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 2,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-002",
+    "character": "転",
+    "onyomi": "テン",
+    "kunyomi": "ころ(ぶ)",
+    "romaji": "ten / korobu",
+    "english": "Revolve, turn, roll over",
+    "sinhala": "හැරවීම / පෙරළීම",
+    "examples": [
+      {
+        "word": "運転者",
+        "reading": "うんてんしゃ",
+        "en": "Driver",
+        "si": "රියදුරු"
+      },
+      {
+        "word": "横転",
+        "reading": "おうてん",
+        "en": "Rollover",
+        "si": "පෙරළීම"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 1,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-003",
+    "character": "安",
+    "onyomi": "アン",
+    "kunyomi": "やす(い)",
+    "romaji": "an / yasui",
+    "english": "Safe, peaceful",
+    "sinhala": "ආරක්ෂිත",
+    "examples": [
+      {
+        "word": "安全",
+        "reading": "あんぜん",
+        "en": "Safety",
+        "si": "ආරක්ෂාව"
+      },
+      {
+        "word": "安全確認",
+        "reading": "あんぜんかくにん",
+        "en": "Safety check",
+        "si": "ආරක්ෂක පරීක්ෂාව"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 19,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-004",
+    "character": "全",
+    "onyomi": "ゼン",
+    "kunyomi": "まった(く)",
+    "romaji": "zen / mattaku",
+    "english": "Whole, all, complete",
+    "sinhala": "සම්පූර්ණ / සියලු",
+    "examples": [
+      {
+        "word": "安全運転",
+        "reading": "あんぜんうんてん",
+        "en": "Safe driving",
+        "si": "ආරක්ෂිත රිය පැදවීම"
+      },
+      {
+        "word": "全幅",
+        "reading": "ぜんぷく",
+        "en": "Overall width",
+        "si": "සම්පූර්ණ පළල"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 19,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-005",
+    "character": "事",
+    "onyomi": "ジ",
+    "kunyomi": "こと",
+    "romaji": "ji / koto",
+    "english": "Matter, incident, business",
+    "sinhala": "කාර්යය / සිදුවීම",
+    "examples": [
+      {
+        "word": "事故",
+        "reading": "じこ",
+        "en": "Accident",
+        "si": "අනතුර"
+      },
+      {
+        "word": "事業用",
+        "reading": "じぎょうよう",
+        "en": "Commercial use",
+        "si": "වාණිජ්‍ය භාවිතය"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 6,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-006",
+    "character": "故",
+    "onyomi": "コ",
+    "kunyomi": "ゆえ",
+    "romaji": "ko / yue",
+    "english": "Cause, breakdown, accident",
+    "sinhala": "හේතුව / කාර්මික දෝෂය",
+    "examples": [
+      {
+        "word": "交通事故",
+        "reading": "こうつうじこ",
+        "en": "Traffic accident",
+        "si": "මාර්ග අනතුර"
+      },
+      {
+        "word": "故障",
+        "reading": "こしょう",
+        "en": "Breakdown",
+        "si": "කාර්මික දෝෂය"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 6,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-007",
+    "character": "交",
+    "onyomi": "コウ",
+    "kunyomi": "まじ(わる)",
+    "romaji": "kou / majiwaru",
+    "english": "Intersect, cross, traffic",
+    "sinhala": "මාරු වීම / මංසන්ධිය",
+    "examples": [
+      {
+        "word": "交通",
+        "reading": "こうつう",
+        "en": "Traffic",
+        "si": "ගමනාගමනය"
+      },
+      {
+        "word": "交差点",
+        "reading": "こうさてん",
+        "en": "Intersection",
+        "si": "මංසන්ධිය"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 8,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-008",
+    "character": "通",
+    "onyomi": "ツウ",
+    "kunyomi": "とお(る)",
+    "romaji": "tsuu / tooru",
+    "english": "Pass through, commute",
+    "sinhala": "ගමන් කිරීම",
+    "examples": [
+      {
+        "word": "通過",
+        "reading": "つうか",
+        "en": "Passing through",
+        "si": "පසු කිරීම"
+      },
+      {
+        "word": "通行禁止",
+        "reading": "つうこうきんし",
+        "en": "No entry/passage",
+        "si": "ගමන් තහනම්"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 44,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-009",
+    "character": "速",
+    "onyomi": "ソク",
+    "kunyomi": "はや(い)",
+    "romaji": "soku / hayai",
+    "english": "Speed, fast",
+    "sinhala": "වේගය",
+    "examples": [
+      {
+        "word": "速度",
+        "reading": "そくど",
+        "en": "Speed",
+        "si": "වේගය"
+      },
+      {
+        "word": "高速道路",
+        "reading": "こうそくどうろ",
+        "en": "Expressway",
+        "si": "අධිවේගී මාර්ගය"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 22,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-010",
+    "character": "距",
+    "onyomi": "キョ",
+    "kunyomi": "へだ(たる)",
+    "romaji": "kyo / hedataru",
+    "english": "Distance",
+    "sinhala": "දුර ප්‍රමාණය",
+    "examples": [
+      {
+        "word": "車間距離",
+        "reading": "しゃかんきょり",
+        "en": "Following distance",
+        "si": "වාහන අතර පරතරය"
+      },
+      {
+        "word": "制動距離",
+        "reading": "せいどうきょり",
+        "en": "Braking distance",
+        "si": "තිරිංග දුර"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 27,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-011",
+    "character": "歩",
+    "onyomi": "ホ",
+    "kunyomi": "ある(く)",
+    "romaji": "ho / aruku",
+    "english": "Walk, step",
+    "sinhala": "ඇවිදීම",
+    "examples": [
+      {
+        "word": "歩行者",
+        "reading": "ほこうしゃ",
+        "en": "Pedestrian",
+        "si": "පදිකයා"
+      },
+      {
+        "word": "横断歩道",
+        "reading": "おうだんほどう",
+        "en": "Crosswalk",
+        "si": "පදික මාරුව"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 29,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-012",
+    "character": "停",
+    "onyomi": "テイ",
+    "kunyomi": "と(める)",
+    "romaji": "tei / tomeru",
+    "english": "Halt, stop",
+    "sinhala": "නැවැත්වීම",
+    "examples": [
+      {
+        "word": "一時停止",
+        "reading": "いちじていし",
+        "en": "Temporary stop",
+        "si": "තාවකාලික නැවැත්වීම"
+      },
+      {
+        "word": "停留所",
+        "reading": "ていりゅうじょ",
+        "en": "Bus stop",
+        "si": "බස් නැවතුම"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 45,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-013",
+    "character": "止",
+    "onyomi": "シ",
+    "kunyomi": "と(まる)",
+    "romaji": "shi / tomaru",
+    "english": "Stop, prohibit",
+    "sinhala": "නතර වීම / වැළැක්වීම",
+    "examples": [
+      {
+        "word": "禁止",
+        "reading": "きんし",
+        "en": "Prohibition",
+        "si": "තහනම"
+      },
+      {
+        "word": "防止",
+        "reading": "ぼうし",
+        "en": "Prevention",
+        "si": "වැළැක්වීම"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 47,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-014",
+    "character": "駐",
+    "onyomi": "チュウ",
+    "kunyomi": "—",
+    "romaji": "chuu",
+    "english": "Park, stationed",
+    "sinhala": "වාහන ගාල් කිරීම",
+    "examples": [
+      {
+        "word": "駐車",
+        "reading": "ちゅうしゃ",
+        "en": "Parking",
+        "si": "ගාල් කිරීම"
+      },
+      {
+        "word": "駐車場",
+        "reading": "ちゅうしゃじょう",
+        "en": "Parking lot",
+        "si": "වාහන නැවතුම්පොළ"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 47,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-015",
+    "character": "踏",
+    "onyomi": "トウ",
+    "kunyomi": "ふ(む)",
+    "romaji": "tou / fumu",
+    "english": "Step on, tread",
+    "sinhala": "පෑගීම / හරස් මාර්ගය",
+    "examples": [
+      {
+        "word": "踏切",
+        "reading": "ふみきり",
+        "en": "Railroad crossing",
+        "si": "දුම්රිය හරස් මාර්ගය"
+      },
+      {
+        "word": "踏み間違い",
+        "reading": "ふみまちがい",
+        "en": "Pedal misapplication",
+        "si": "පැඩලය වැරදී පෑගීම"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 34,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-016",
+    "character": "飲",
+    "onyomi": "イン",
+    "kunyomi": "の(む)",
+    "romaji": "in / nomu",
+    "english": "Drink",
+    "sinhala": "පානය කිරීම",
+    "examples": [
+      {
+        "word": "飲酒運転",
+        "reading": "いんしゅうんてん",
+        "en": "Drunk driving",
+        "si": "බීමත්ව රිය පැදවීම"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 21,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-017",
+    "character": "点",
+    "onyomi": "テン",
+    "kunyomi": "つ(ける)",
+    "romaji": "ten / tsukeru",
+    "english": "Point, check, light up",
+    "sinhala": "ලක්ෂ්‍යය / පරීක්ෂාව",
+    "examples": [
+      {
+        "word": "点検",
+        "reading": "てんけん",
+        "en": "Inspection",
+        "si": "පරීක්ෂාව"
+      },
+      {
+        "word": "点呼",
+        "reading": "てんこ",
+        "en": "Roll call",
+        "si": "ටෙන්කෝ පරීක්ෂාව"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 71,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-018",
+    "character": "検",
+    "onyomi": "ケン",
+    "kunyomi": "しら(べる)",
+    "romaji": "ken / shiraberu",
+    "english": "Examine, inspect",
+    "sinhala": "විමර්ශනය / පරීක්ෂා කිරීම",
+    "examples": [
+      {
+        "word": "日常点検",
+        "reading": "にちじょうてんけん",
+        "en": "Daily inspection",
+        "si": "දෛනික පරීක්ෂාව"
+      },
+      {
+        "word": "検知器",
+        "reading": "けんちき",
+        "en": "Detector",
+        "si": "හඳුනාගැනීමේ යන්ත්‍රය"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 71,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-019",
+    "character": "管",
+    "onyomi": "カン",
+    "kunyomi": "くだ",
+    "romaji": "kan / kuda",
+    "english": "Manage, control, pipe",
+    "sinhala": "කළමනාකරණය",
+    "examples": [
+      {
+        "word": "管理",
+        "reading": "かんり",
+        "en": "Management",
+        "si": "කළමනාකරණය"
+      },
+      {
+        "word": "運行管理者",
+        "reading": "うんこうかんりしゃ",
+        "en": "Operation manager",
+        "si": "මෙහෙයුම් කළමනාකරු"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 75,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-020",
+    "character": "報",
+    "onyomi": "ホウ",
+    "kunyomi": "むく(いる)",
+    "romaji": "hou",
+    "english": "Report, inform",
+    "sinhala": "වාර්තා කිරීම",
+    "examples": [
+      {
+        "word": "報告",
+        "reading": "ほうこく",
+        "en": "Report",
+        "si": "වාර්තාව"
+      },
+      {
+        "word": "業務日報",
+        "reading": "ぎょうむにっぽう",
+        "en": "Daily work record",
+        "si": "දෛනික වැඩ වාර්තාව"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 113,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-021",
+    "character": "救",
+    "onyomi": "キュウ",
+    "kunyomi": "すく(う)",
+    "romaji": "kyuu / sukuu",
+    "english": "Rescue, save",
+    "sinhala": "බේරා ගැනීම",
+    "examples": [
+      {
+        "word": "救護",
+        "reading": "きゅうご",
+        "en": "First aid / rescue",
+        "si": "ප්‍රථමාධාර / බේරා ගැනීම"
+      },
+      {
+        "word": "救急車",
+        "reading": "きゅうきゅうしゃ",
+        "en": "Ambulance",
+        "si": "ගිලන් රථය"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 77,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-022",
+    "character": "緊",
+    "onyomi": "キン",
+    "kunyomi": "—",
+    "romaji": "kin",
+    "english": "Urgent, tense",
+    "sinhala": "හදිසි",
+    "examples": [
+      {
+        "word": "緊急",
+        "reading": "きんきゅう",
+        "en": "Emergency",
+        "si": "හදිසි අවස්ථාව"
+      },
+      {
+        "word": "緊急車両",
+        "reading": "きんきゅうしゃりょう",
+        "en": "Emergency vehicle",
+        "si": "හදිසි සේවා වාහනය"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 33,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-023",
+    "character": "消",
+    "onyomi": "ショウ",
+    "kunyomi": "け(す)",
+    "romaji": "shou / kesu",
+    "english": "Extinguish, erase",
+    "sinhala": "නිවා දැමීම",
+    "examples": [
+      {
+        "word": "消火器",
+        "reading": "しょうかき",
+        "en": "Fire extinguisher",
+        "si": "ගිනි නිවන උපකරණය"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 88,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-024",
+    "character": "風",
+    "onyomi": "フウ",
+    "kunyomi": "かぜ",
+    "romaji": "fuu / kaze",
+    "english": "Wind",
+    "sinhala": "සුළඟ",
+    "examples": [
+      {
+        "word": "横風",
+        "reading": "よこかぜ",
+        "en": "Crosswind",
+        "si": "පැති සුළඟ"
+      },
+      {
+        "word": "強風",
+        "reading": "きょうふう",
+        "en": "Strong wind",
+        "si": "තද සුළඟ"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 90,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-025",
+    "character": "震",
+    "onyomi": "シン",
+    "kunyomi": "ふる(える)",
+    "romaji": "shin / furueru",
+    "english": "Shake, quake",
+    "sinhala": "කම්පනය",
+    "examples": [
+      {
+        "word": "地震",
+        "reading": "じしん",
+        "en": "Earthquake",
+        "si": "භූමිකම්පාව"
+      },
+      {
+        "word": "大地震",
+        "reading": "おおじしん",
+        "en": "Major earthquake",
+        "si": "මහා භූමිකම්පාව"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 92,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-026",
+    "character": "死",
+    "onyomi": "シ",
+    "kunyomi": "し(ぬ)",
+    "romaji": "shi / shinu",
+    "english": "Death, blind (spot)",
+    "sinhala": "මරණය / අන්ධ (කලාපය)",
+    "examples": [
+      {
+        "word": "死角",
+        "reading": "しかく",
+        "en": "Blind spot",
+        "si": "අන්ධ කලාපය"
+      },
+      {
+        "word": "死亡事故",
+        "reading": "しぼうじこ",
+        "en": "Fatal accident",
+        "si": "මාරාන්තික අනතුර"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 105,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-027",
+    "character": "輪",
+    "onyomi": "リン",
+    "kunyomi": "わ",
+    "romaji": "rin / wa",
+    "english": "Wheel, ring",
+    "sinhala": "රෝදය",
+    "examples": [
+      {
+        "word": "内輪差",
+        "reading": "ないりんさ",
+        "en": "Inner wheel diff",
+        "si": "ඇතුළත රෝද පරතරය"
+      },
+      {
+        "word": "二輪車",
+        "reading": "にりんしゃ",
+        "en": "Motorcycle",
+        "si": "යතුරුපැදිය"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 100,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-028",
+    "character": "荷",
+    "onyomi": "カ",
+    "kunyomi": "に",
+    "romaji": "ka / ni",
+    "english": "Cargo, load, freight",
+    "sinhala": "භාණ්ඩ / බඩු",
+    "examples": [
+      {
+        "word": "荷物",
+        "reading": "にもつ",
+        "en": "Cargo / baggage",
+        "si": "භාණ්ඩ"
+      },
+      {
+        "word": "荷役",
+        "reading": "にやく",
+        "en": "Cargo handling",
+        "si": "භාණ්ඩ පැටවීම/බෑම"
+      }
+    ],
+    "chapterId": "ch-03",
+    "sourcePage": 115,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-029",
+    "character": "積",
+    "onyomi": "セキ",
+    "kunyomi": "つ(む)",
+    "romaji": "seki / tsumu",
+    "english": "Load, stack, accumulate",
+    "sinhala": "පැටවීම / ගොඩගැසීම",
+    "examples": [
+      {
+        "word": "積載",
+        "reading": "せきさい",
+        "en": "Loading",
+        "si": "පැටවීම"
+      },
+      {
+        "word": "過積載",
+        "reading": "かせきさい",
+        "en": "Overloading",
+        "si": "අධික බර පැටවීම"
+      }
+    ],
+    "chapterId": "ch-03",
+    "sourcePage": 116,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-030",
+    "character": "載",
+    "onyomi": "サイ",
+    "kunyomi": "の(せる)",
+    "romaji": "sai / noseru",
+    "english": "Load onto a vehicle",
+    "sinhala": "වාහනයට පැටවීම",
+    "examples": [
+      {
+        "word": "最大積載量",
+        "reading": "さいだいせきさいりょう",
+        "en": "Max payload",
+        "si": "උපරිම පැටවුම් ධාරිතාව"
+      }
+    ],
+    "chapterId": "ch-03",
+    "sourcePage": 148,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-031",
+    "character": "崩",
+    "onyomi": "ホウ",
+    "kunyomi": "くず(れる)",
+    "romaji": "hou / kuzureru",
+    "english": "Collapse, crumble",
+    "sinhala": "කඩා වැටීම",
+    "examples": [
+      {
+        "word": "荷崩れ",
+        "reading": "にくずれ",
+        "en": "Cargo collapse",
+        "si": "භාණ්ඩ කඩා වැටීම"
+      }
+    ],
+    "chapterId": "ch-03",
+    "sourcePage": 130,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-032",
+    "character": "偏",
+    "onyomi": "ヘン",
+    "kunyomi": "かたよ(る)",
+    "romaji": "hen / katayoru",
+    "english": "Uneven, biased, leaning",
+    "sinhala": "එක් පැත්තකට බර වීම",
+    "examples": [
+      {
+        "word": "偏荷重",
+        "reading": "へんかじゅう",
+        "en": "Uneven load",
+        "si": "අසමතුලිත බර"
+      }
+    ],
+    "chapterId": "ch-03",
+    "sourcePage": 144,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-033",
+    "character": "過",
+    "onyomi": "カ",
+    "kunyomi": "す(ぎる)",
+    "romaji": "ka / sugiru",
+    "english": "Exceed, pass",
+    "sinhala": "ඉක්මවා යාම",
+    "examples": [
+      {
+        "word": "過積載",
+        "reading": "かせきさい",
+        "en": "Overloading",
+        "si": "අධික බර පැටවීම"
+      },
+      {
+        "word": "通過",
+        "reading": "つうか",
+        "en": "Passing",
+        "si": "පසු කිරීම"
+      }
+    ],
+    "chapterId": "ch-03",
+    "sourcePage": 151,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-034",
+    "character": "固",
+    "onyomi": "コ",
+    "kunyomi": "かた(める)",
+    "romaji": "ko / katameru",
+    "english": "Solid, secure, fasten",
+    "sinhala": "තදින් සවි කිරීම",
+    "examples": [
+      {
+        "word": "固縛",
+        "reading": "こばく",
+        "en": "Securing cargo",
+        "si": "භාණ්ඩ බැඳ තැබීම"
+      },
+      {
+        "word": "固定",
+        "reading": "こてい",
+        "en": "Fastening",
+        "si": "ස්ථාවර කිරීම"
+      }
+    ],
+    "chapterId": "ch-03",
+    "sourcePage": 141,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-035",
+    "character": "危",
+    "onyomi": "キ",
+    "kunyomi": "あぶ(ない)",
+    "romaji": "ki / abunai",
+    "english": "Dangerous, risk",
+    "sinhala": "අනතුරුදායක",
+    "examples": [
+      {
+        "word": "危険",
+        "reading": "きけん",
+        "en": "Danger / hazard",
+        "si": "අනතුර"
+      },
+      {
+        "word": "危険予知",
+        "reading": "きけんよち",
+        "en": "Hazard prediction",
+        "si": "අනතුරු පුරෝකථනය"
+      }
+    ],
+    "chapterId": "ch-04",
+    "sourcePage": 174,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-036",
+    "character": "険",
+    "onyomi": "ケン",
+    "kunyomi": "けわ(しい)",
+    "romaji": "ken / kewashii",
+    "english": "Hazard, steep",
+    "sinhala": "අවදානම",
+    "examples": [
+      {
+        "word": "危険要因",
+        "reading": "きけんよういん",
+        "en": "Hazard factor",
+        "si": "අනතුරු සාධකය"
+      }
+    ],
+    "chapterId": "ch-04",
+    "sourcePage": 176,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-037",
+    "character": "予",
+    "onyomi": "ヨ",
+    "kunyomi": "あらかじ(め)",
+    "romaji": "yo",
+    "english": "Advance, predict",
+    "sinhala": "කල්තියා අනුමාන කිරීම",
+    "examples": [
+      {
+        "word": "予測",
+        "reading": "よそく",
+        "en": "Prediction",
+        "si": "පුරෝකථනය"
+      },
+      {
+        "word": "予防",
+        "reading": "よぼう",
+        "en": "Prevention",
+        "si": "පෙර වැළැක්වීම"
+      }
+    ],
+    "chapterId": "ch-04",
+    "sourcePage": 174,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-038",
+    "character": "左",
+    "onyomi": "サ",
+    "kunyomi": "ひだり",
+    "romaji": "sa / hidari",
+    "english": "Left",
+    "sinhala": "වම",
+    "examples": [
+      {
+        "word": "左折",
+        "reading": "させつ",
+        "en": "Left turn",
+        "si": "වමට හැරීම"
+      },
+      {
+        "word": "左側",
+        "reading": "ひだりがわ",
+        "en": "Left side",
+        "si": "වම් පැත්ත"
+      }
+    ],
+    "chapterId": "ch-04",
+    "sourcePage": 175,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-039",
+    "character": "右",
+    "onyomi": "ウ",
+    "kunyomi": "みぎ",
+    "romaji": "u / migi",
+    "english": "Right",
+    "sinhala": "දකුණ",
+    "examples": [
+      {
+        "word": "右折",
+        "reading": "うせつ",
+        "en": "Right turn",
+        "si": "දකුණට හැරීම"
+      },
+      {
+        "word": "左右確認",
+        "reading": "さゆうかくにん",
+        "en": "Left-right check",
+        "si": "දෙපස පරීක්ෂාව"
+      }
+    ],
+    "chapterId": "ch-04",
+    "sourcePage": 214,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-040",
+    "character": "確",
+    "onyomi": "カク",
+    "kunyomi": "たし(か)",
+    "romaji": "kaku / tashika",
+    "english": "Confirm, certain",
+    "sinhala": "තහවුරු කිරීම",
+    "examples": [
+      {
+        "word": "確認",
+        "reading": "かくにん",
+        "en": "Confirmation",
+        "si": "පරීක්ෂා කර තහවුරු කිරීම"
+      },
+      {
+        "word": "確実",
+        "reading": "かくじつ",
+        "en": "Reliable/sure",
+        "si": "නිශ්චිත"
+      }
+    ],
+    "chapterId": "ch-04",
+    "sourcePage": 177,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-041",
+    "character": "認",
+    "onyomi": "ニン",
+    "kunyomi": "みと(める)",
+    "romaji": "nin / mitomeru",
+    "english": "Recognize, verify",
+    "sinhala": "හඳුනා ගැනීම",
+    "examples": [
+      {
+        "word": "目視確認",
+        "reading": "もくしかくにん",
+        "en": "Visual check",
+        "si": "ඇසින් පරීක්ෂා කිරීම"
+      }
+    ],
+    "chapterId": "ch-04",
+    "sourcePage": 211,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-042",
+    "character": "徐",
+    "onyomi": "ジョ",
+    "kunyomi": "おもむろ",
+    "romaji": "jo",
+    "english": "Gradual, slow",
+    "sinhala": "සෙමින්",
+    "examples": [
+      {
+        "word": "徐行",
+        "reading": "じょこう",
+        "en": "Slow driving",
+        "si": "වහාම නැවැත්විය හැකි සෙමින් ධාවනය"
+      }
+    ],
+    "chapterId": "ch-04",
+    "sourcePage": 181,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-043",
+    "character": "渋",
+    "onyomi": "ジュウ",
+    "kunyomi": "しぶ(い)",
+    "romaji": "juu",
+    "english": "Congested, jam",
+    "sinhala": "තදබදය",
+    "examples": [
+      {
+        "word": "渋滞",
+        "reading": "じゅうたい",
+        "en": "Traffic jam",
+        "si": "වාහන තදබදය"
+      }
+    ],
+    "chapterId": "ch-04",
+    "sourcePage": 202,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-044",
+    "character": "雪",
+    "onyomi": "セツ",
+    "kunyomi": "ゆき",
+    "romaji": "setsu / yuki",
+    "english": "Snow",
+    "sinhala": "හිම",
+    "examples": [
+      {
+        "word": "雪道",
+        "reading": "ゆきみち",
+        "en": "Snowy road",
+        "si": "හිම මාර්ගය"
+      }
+    ],
+    "chapterId": "ch-04",
+    "sourcePage": 205,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-045",
+    "character": "信",
+    "onyomi": "シン",
+    "kunyomi": "—",
+    "romaji": "shin",
+    "english": "Signal, trust",
+    "sinhala": "සංඥාව / විශ්වාසය",
+    "examples": [
+      {
+        "word": "信号機",
+        "reading": "しんごうき",
+        "en": "Traffic signal",
+        "si": "මාර්ග සංඥා ලාම්පුව"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 42,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-046",
+    "character": "標",
+    "onyomi": "ヒョウ",
+    "kunyomi": "しるべ",
+    "romaji": "hyou",
+    "english": "Sign, mark",
+    "sinhala": "සලකුණ",
+    "examples": [
+      {
+        "word": "道路標識",
+        "reading": "どうろひょうしき",
+        "en": "Road sign",
+        "si": "මාර්ග සංඥා පුවරුව"
+      }
+    ],
+    "chapterId": "ch-01",
+    "sourcePage": 44,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-047",
+    "character": "記",
+    "onyomi": "キ",
+    "kunyomi": "しる(す)",
+    "romaji": "ki / shirusu",
+    "english": "Record, write down",
+    "sinhala": "සටහන් කිරීම",
+    "examples": [
+      {
+        "word": "記録",
+        "reading": "きろく",
+        "en": "Record",
+        "si": "වාර්තාව"
+      },
+      {
+        "word": "記入",
+        "reading": "きにゅう",
+        "en": "Entry/filling in",
+        "si": "පිරවීම"
+      }
+    ],
+    "chapterId": "ch-02",
+    "sourcePage": 113,
+    "verificationStatus": "VERIFIED"
+  },
+  {
+    "id": "knj-048",
+    "character": "重",
+    "onyomi": "ジュウ",
+    "kunyomi": "おも(い)",
+    "romaji": "juu / omoi",
+    "english": "Heavy, important",
+    "sinhala": "බර / වැදගත්",
+    "examples": [
+      {
+        "word": "総重量",
+        "reading": "そうじゅうりょう",
+        "en": "Gross weight",
+        "si": "සම්පූර්ණ බර"
+      },
+      {
+        "word": "重大事故",
+        "reading": "じゅうだいじこ",
+        "en": "Major accident",
+        "si": "බරපතළ අනතුර"
+      }
+    ],
+    "chapterId": "ch-03",
+    "sourcePage": 144,
+    "verificationStatus": "VERIFIED"
+  }
+]

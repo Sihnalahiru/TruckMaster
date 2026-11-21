@@ -1,0 +1,1153 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-11-21T18:00:43.977Z",
+  "figmaReferenceNote": "BahasaKu Figma exports (.fig/PDF/PNG) were not present in the workspace; a cohesive provisional TruckMaster mobile-first design system was implemented.",
+  "sources": {
+    "englishBook": {
+      "filename": "ssw_truck driving English test book.pdf",
+      "pages": 240,
+      "printedBodyPages": 231
+    },
+    "japaneseBook": {
+      "filename": "ssw_truck driving japnese test book.pdf",
+      "pages": 242,
+      "printedBodyPages": 232
+    },
+    "totalImages": 226
+  },
+  "chapters": [
+    {
+      "id": "ch-01",
+      "number": "01",
+      "titleEn": "Truck Driver Basics",
+      "titleJa": "トラック運転者の基本",
+      "titleJaRuby": "トラック運転者[うんてんしゃ]の基本[きほん]",
+      "titleSi": "ට්‍රක් රථ රියදුරෙකුගේ මූලික කරුණු",
+      "printedRange": [
+        1,
+        62
+      ],
+      "enPdfRange": [
+        10,
+        71
+      ],
+      "jaPdfRange": [
+        11,
+        72
+      ],
+      "descriptionEn": "Role of commercial trucking in Japan, social responsibility, accident prevention, 4S workplace discipline, traffic laws, road signs, eco-driving, and route planning.",
+      "descriptionSi": "ජපානයේ වාණිජ්‍ය ට්‍රක් රථ ප්‍රවාහනයේ කාර්යභාරය, අනතුරු වැළැක්වීම, 4S පිළිවෙළ, මාර්ග නීති, සංඥා සහ පරිසර හිතකාමී රිය පැදවීම.",
+      "topicCount": 5,
+      "sectionCount": 19,
+      "topics": [
+        {
+          "topicId": "ch01-t01",
+          "code": "1.1",
+          "titleEn": "How Trucks Support People's Lives and Jobs",
+          "titleJa": "人々の生活や仕事を支えるトラック",
+          "titleJaRuby": "人々[ひとびと]の生活[せいかつ]や仕事[しごと]を支[ささ]えるトラック",
+          "titleSi": "මිනිසුන්ගේ ජීවිතය සහ රැකියා සඳහා ට්‍රක් රථවල දායකත්වය",
+          "startPage": 1,
+          "endPage": 5,
+          "sections": [
+            {
+              "sectionId": "ch01-t01-s1",
+              "code": "1.1",
+              "titleEn": "The Role of Trucks",
+              "titleJa": "トラックの役割",
+              "titleSi": "මිනිසුන්ගේ ජීවිතය සහ රැකියා සඳහා ට්‍රක් රථවල දායකත්වය (1.1)",
+              "printedPageStart": 1,
+              "printedPageEnd": 2,
+              "imageCount": 1
+            },
+            {
+              "sectionId": "ch01-t01-s2",
+              "code": "1.2",
+              "titleEn": "What If Truck Transportation Stops?",
+              "titleJa": "トラック輸送が止まったら",
+              "titleSi": "මිනිසුන්ගේ ජීවිතය සහ රැකියා සඳහා ට්‍රක් රථවල දායකත්වය (1.2)",
+              "printedPageStart": 3,
+              "printedPageEnd": 3,
+              "imageCount": 0
+            },
+            {
+              "sectionId": "ch01-t01-s3",
+              "code": "1.3",
+              "titleEn": "Private Trucks vs Commercial Trucks",
+              "titleJa": "自家用トラックと事業用トラックの違い",
+              "titleSi": "මිනිසුන්ගේ ජීවිතය සහ රැකියා සඳහා ට්‍රක් රථවල දායකත්වය (1.3)",
+              "printedPageStart": 4,
+              "printedPageEnd": 5,
+              "imageCount": 1
+            }
+          ]
+        },
+        {
+          "topicId": "ch01-t02",
+          "code": "1.2",
+          "titleEn": "Social Impact of Truck Accidents & Safety Devices",
+          "titleJa": "トラック事故の社会的影響と安全管理機器",
+          "titleJaRuby": "トラック事故[じこ]の社会的[しゃかいてき]影響[えいきょう]と安全管理機器[あんぜんかんりきき]",
+          "titleSi": "ට්‍රක් රථ අනතුරුවල සමාජ බලපෑම සහ ආරක්ෂක උපාංග",
+          "startPage": 6,
+          "endPage": 10,
+          "sections": [
+            {
+              "sectionId": "ch01-t02-s1",
+              "code": "2.1",
+              "titleEn": "Major Accidents and Their Social Impact",
+              "titleJa": "重大事故と社会的影響",
+              "titleSi": "ට්‍රක් රථ අනතුරුවල සමාජ බලපෑම සහ ආරක්ෂක උපාංග (2.1)",
+              "printedPageStart": 6,
+              "printedPageEnd": 6,
+              "imageCount": 1
+            },
+            {
+              "sectionId": "ch01-t02-s2",
+              "code": "2.2",
+              "titleEn": "Rear-End Collisions: Causes and Situations",
+              "titleJa": "追突事故の原因と状況",
+              "titleSi": "ට්‍රක් රථ අනතුරුවල සමාජ බලපෑම සහ ආරක්ෂක උපාංග (2.2)",
+              "printedPageStart": 7,
+              "printedPageEnd": 7,
+              "imageCount": 1
+            },
+            {
+              "sectionId": "ch01-t02-s3",
+              "code": "2.3",
+              "titleEn": "Intersection Accidents",
+              "titleJa": "交差点事故",
+              "titleSi": "ට්‍රක් රථ අනතුරුවල සමාජ බලපෑම සහ ආරක්ෂක උපාංග (2.3)",
+              "printedPageStart": 8,
+              "printedPageEnd": 8,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "ch01-t02-s4",
+              "code": "2.4",
+              "titleEn": "Preventing Health-Related Accidents",
+              "titleJa": "健康起因事故の防止",
+              "titleSi": "ට්‍රක් රථ අනතුරුවල සමාජ බලපෑම සහ ආරක්ෂක උපාංග (2.4)",
+              "printedPageStart": 9,
+              "printedPageEnd": 9,
+              "imageCount": 1
+            },
+            {
+              "sectionId": "ch01-t02-s5",
+              "code": "2.5",
+              "titleEn": "Safety Management Devices (Digital Tachograph & Dashcam)",
+              "titleJa": "安全管理機器（デジタコ・ドラレコ）",
+              "titleSi": "ට්‍රක් රථ අනතුරුවල සමාජ බලපෑම සහ ආරක්ෂක උපාංග (2.5)",
+              "printedPageStart": 10,
+              "printedPageEnd": 10,
+              "imageCount": 1
+            }
+          ]
+        },
+        {
+          "topicId": "ch01-t03",
+          "code": "1.3",
+          "titleEn": "The Proper Mindset of a Truck Driver & 4S Cleanliness",
+          "titleJa": "トラック運転者の心構えと4S活動",
+          "titleJaRuby": "トラック運転者[うんてんしゃ]の心構[こころがま]えと4S活動[かつどう]",
+          "titleSi": "ට්‍රක් රථ රියදුරෙකුගේ නිවැරදි ආකල්ප, ආචාර ධර්ම සහ 4S පිරිසිදුකම",
+          "startPage": 11,
+          "endPage": 18,
+          "sections": [
+            {
+              "sectionId": "ch01-t03-s1",
+              "code": "3.1–3.3",
+              "titleEn": "Greetings & Personal Appearance",
+              "titleJa": "あいさつと身だしなみ",
+              "titleSi": "ට්‍රක් රථ රියදුරෙකුගේ නිවැරදි ආකල්ප, ආචාර ධර්ම සහ 4S පිරිසිදුකම (3.1–3.3)",
+              "printedPageStart": 11,
+              "printedPageEnd": 12,
+              "imageCount": 16
+            },
+            {
+              "sectionId": "ch01-t03-s2",
+              "code": "3.4–3.5",
+              "titleEn": "Workplace Mindset & Language Etiquette",
+              "titleJa": "職場での心構えと言葉づかい",
+              "titleSi": "ට්‍රක් රථ රියදුරෙකුගේ නිවැරදි ආකල්ප, ආචාර ධර්ම සහ 4S පිරිසිදුකම (3.4–3.5)",
+              "printedPageStart": 13,
+              "printedPageEnd": 14,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "ch01-t03-s3",
+              "code": "3.6–3.7",
+              "titleEn": "Vehicle 4S Cleanliness & Special Considerations",
+              "titleJa": "車両の整理・整頓（4S）と特別な配慮",
+              "titleSi": "ට්‍රක් රථ රියදුරෙකුගේ නිවැරදි ආකල්ප, ආචාර ධර්ම සහ 4S පිරිසිදුකම (3.6–3.7)",
+              "printedPageStart": 15,
+              "printedPageEnd": 18,
+              "imageCount": 4
+            }
+          ]
+        },
+        {
+          "topicId": "ch01-t04",
+          "code": "1.4",
+          "titleEn": "Basics of Safe Driving & Traffic Rules",
+          "titleJa": "安全運転の基本と交通ルール",
+          "titleJaRuby": "安全運転[あんぜんうんてん]の基本[きほん]と交通[こうつう]ルール",
+          "titleSi": "ආරක්ෂිත රිය පැදවීමේ මූලික නීති සහ මාර්ග සංඥා",
+          "startPage": 19,
+          "endPage": 51,
+          "sections": [
+            {
+              "sectionId": "ch01-t04-s1",
+              "code": "4.1–4.3",
+              "titleEn": "Health Management, Zero Drunk Driving & Speed Limits",
+              "titleJa": "健康管理・飲酒運転禁止・制限速度",
+              "titleSi": "ආරක්ෂිත රිය පැදවීමේ මූලික නීති සහ මාර්ග සංඥා (4.1–4.3)",
+              "printedPageStart": 19,
+              "printedPageEnd": 23,
+              "imageCount": 4
+            },
+            {
+              "sectionId": "ch01-t04-s2",
+              "code": "4.4–4.6",
+              "titleEn": "Intersections, Following Distance & No Smartphones",
+              "titleJa": "交差点・車間距離・ながらスマホ禁止",
+              "titleSi": "ආරක්ෂිත රිය පැදවීමේ මූලික නීති සහ මාර්ග සංඥා (4.4–4.6)",
+              "printedPageStart": 24,
+              "printedPageEnd": 28,
+              "imageCount": 4
+            },
+            {
+              "sectionId": "ch01-t04-s3",
+              "code": "4.7–4.9",
+              "titleEn": "Pedestrians, Emergency Vehicles & Railway Crossings",
+              "titleJa": "歩行者保護・緊急車両・踏切通過",
+              "titleSi": "ආරක්ෂිත රිය පැදවීමේ මූලික නීති සහ මාර්ග සංඥා (4.7–4.9)",
+              "printedPageStart": 29,
+              "printedPageEnd": 36,
+              "imageCount": 10
+            },
+            {
+              "sectionId": "ch01-t04-s4",
+              "code": "4.10–4.11",
+              "titleEn": "Highways, Hills, Curves and Tunnels",
+              "titleJa": "高速道路・坂道・カーブ・トンネル",
+              "titleSi": "ආරක්ෂිත රිය පැදවීමේ මූලික නීති සහ මාර්ග සංඥා (4.10–4.11)",
+              "printedPageStart": 37,
+              "printedPageEnd": 41,
+              "imageCount": 5
+            },
+            {
+              "sectionId": "ch01-t04-s5",
+              "code": "4.12–4.15",
+              "titleEn": "Traffic Signals, Road Signs, Parking & Night Driving",
+              "titleJa": "信号・標識・駐停車・夜間運転",
+              "titleSi": "ආරක්ෂිත රිය පැදවීමේ මූලික නීති සහ මාර්ග සංඥා (4.12–4.15)",
+              "printedPageStart": 42,
+              "printedPageEnd": 51,
+              "imageCount": 16
+            }
+          ]
+        },
+        {
+          "topicId": "ch01-t05",
+          "code": "1.5",
+          "titleEn": "Driving Etiquette, Eco-Driving & Route Selection",
+          "titleJa": "運転マナー・エコドライブ・経路選択",
+          "titleJaRuby": "運転[うんてん]マナー・エコドライブ・経路選択[けいろせんたく]",
+          "titleSi": "රිය පැදවීමේ ආචාර ධර්ම, පරිසර හිතකාමී ධාවනය (Eco-Driving) සහ මාර්ග තේරීම",
+          "startPage": 52,
+          "endPage": 62,
+          "sections": [
+            {
+              "sectionId": "ch01-t05-s1",
+              "code": "5.1–5.6",
+              "titleEn": "Driving Etiquette & Moving Billboards",
+              "titleJa": "運転マナーと走る広告塔",
+              "titleSi": "රිය පැදවීමේ ආචාර ධර්ම, පරිසර හිතකාමී ධාවනය (Eco-Driving) සහ මාර්ග තේරීම (5.1–5.6)",
+              "printedPageStart": 52,
+              "printedPageEnd": 55,
+              "imageCount": 4
+            },
+            {
+              "sectionId": "ch01-t05-s2",
+              "code": "6",
+              "titleEn": "Eco-Driving Techniques",
+              "titleJa": "エコドライブ",
+              "titleSi": "රිය පැදවීමේ ආචාර ධර්ම, පරිසර හිතකාමී ධාවනය (Eco-Driving) සහ මාර්ග තේරීම (6)",
+              "printedPageStart": 56,
+              "printedPageEnd": 60,
+              "imageCount": 3
+            },
+            {
+              "sectionId": "ch01-t05-s3",
+              "code": "7.1–7.2",
+              "titleEn": "Choosing Suitable & Safe Driving Routes",
+              "titleJa": "適切な走行経路の選択と事前確認",
+              "titleSi": "රිය පැදවීමේ ආචාර ධර්ම, පරිසර හිතකාමී ධාවනය (Eco-Driving) සහ මාර්ග තේරීම (7.1–7.2)",
+              "printedPageStart": 61,
+              "printedPageEnd": 62,
+              "imageCount": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch-02",
+      "number": "02",
+      "titleEn": "Operational Operations",
+      "titleJa": "運行業務",
+      "titleJaRuby": "運行業務[うんこうぎょうむ]",
+      "titleSi": "මෙහෙයුම් සහ ධාවන කටයුතු",
+      "printedRange": [
+        63,
+        114
+      ],
+      "enPdfRange": [
+        72,
+        123
+      ],
+      "jaPdfRange": [
+        73,
+        124
+      ],
+      "descriptionEn": "Daily workflow, vehicle inspections, Tenko roll calls, accident/breakdown/delay response, abnormal weather & earthquakes, truck dimensions/blind spots, and Gyomu Nippo work records.",
+      "descriptionSi": "දෛනික රාජකාරි පිළිවෙළ, වාහන පරීක්ෂාව, ටෙන්කෝ, අනතුරු/කාලගුණ ප්‍රතිචාර, ට්‍රක් රථ අන්ධ කලාප සහ දෛනික වැඩ වාර්තාව (業務日報).",
+      "topicCount": 5,
+      "sectionCount": 14,
+      "topics": [
+        {
+          "topicId": "ch02-t01",
+          "code": "2.1",
+          "titleEn": "Daily Workflow, Inspections, Roll Call & Operation Management",
+          "titleJa": "仕事の流れ・日常点検・点呼・運行管理",
+          "titleJaRuby": "仕事[しごと]の流[なが]れ・日常点検[にちじょうてんけん]・点呼[てんこ]・運行管理[うんこうかんり]",
+          "titleSi": "දෛනික රාජකාරි පිළිවෙළ, වාහන පරීක්ෂාව, ටෙන්කෝ (点呼) සහ මෙහෙයුම් කළමනාකරණය",
+          "startPage": 63,
+          "endPage": 76,
+          "sections": [
+            {
+              "sectionId": "ch02-t01-s1",
+              "code": "1–2",
+              "titleEn": "Workflow & Driver Responsibilities",
+              "titleJa": "仕事の流れと運転者の責務",
+              "titleSi": "දෛනික රාජකාරි පිළිවෙළ, වාහන පරීක්ෂාව, ටෙන්කෝ (点呼) සහ මෙහෙයුම් කළමනාකරණය (1–2)",
+              "printedPageStart": 63,
+              "printedPageEnd": 70,
+              "imageCount": 8
+            },
+            {
+              "sectionId": "ch02-t01-s2",
+              "code": "3",
+              "titleEn": "Daily Vehicle Inspections",
+              "titleJa": "日常点検",
+              "titleSi": "දෛනික රාජකාරි පිළිවෙළ, වාහන පරීක්ෂාව, ටෙන්කෝ (点呼) සහ මෙහෙයුම් කළමනාකරණය (3)",
+              "printedPageStart": 71,
+              "printedPageEnd": 71,
+              "imageCount": 0
+            },
+            {
+              "sectionId": "ch02-t01-s3",
+              "code": "4–5",
+              "titleEn": "Pre-Shift Roll Call (Tenko) & Operation Management",
+              "titleJa": "乗務前点呼と運行管理",
+              "titleSi": "දෛනික රාජකාරි පිළිවෙළ, වාහන පරීක්ෂාව, ටෙන්කෝ (点呼) සහ මෙහෙයුම් කළමනාකරණය (4–5)",
+              "printedPageStart": 72,
+              "printedPageEnd": 76,
+              "imageCount": 8
+            }
+          ]
+        },
+        {
+          "topicId": "ch02-t02",
+          "code": "2.2",
+          "titleEn": "Accidents, Breakdowns, Delays & Emergency Equipment",
+          "titleJa": "事故・故障・遅延対応と非常信号用具・消火器",
+          "titleJaRuby": "事故[じこ]・故障[こしょう]・遅延[ちえん]対応[たいおう]と非常信号用具[ひじょうしんごうようぐ]・消火器[しょうかき]",
+          "titleSi": "අනතුරු, කාර්මික දෝෂ, ප්‍රමාදයන් සහ හදිසි ආරක්ෂක උපකරණ භාවිතය",
+          "startPage": 77,
+          "endPage": 88,
+          "sections": [
+            {
+              "sectionId": "ch02-t02-s1",
+              "code": "6.1–6.3",
+              "titleEn": "Traffic Accidents & Vehicle Breakdowns",
+              "titleJa": "交通事故・車両故障時の対応",
+              "titleSi": "අනතුරු, කාර්මික දෝෂ, ප්‍රමාදයන් සහ හදිසි ආරක්ෂක උපකරණ භාවිතය (6.1–6.3)",
+              "printedPageStart": 77,
+              "printedPageEnd": 84,
+              "imageCount": 10
+            },
+            {
+              "sectionId": "ch02-t02-s2",
+              "code": "7.1–7.2",
+              "titleEn": "Handling Delays & Reporting to Dispatch",
+              "titleJa": "運行遅延時の対応と会社への報告",
+              "titleSi": "අනතුරු, කාර්මික දෝෂ, ප්‍රමාදයන් සහ හදිසි ආරක්ෂක උපකරණ භාවිතය (7.1–7.2)",
+              "printedPageStart": 85,
+              "printedPageEnd": 86,
+              "imageCount": 1
+            },
+            {
+              "sectionId": "ch02-t02-s3",
+              "code": "8.1–8.2",
+              "titleEn": "Emergency Signal Flares & Fire Extinguishers",
+              "titleJa": "非常信号用具と消火器の取扱い",
+              "titleSi": "අනතුරු, කාර්මික දෝෂ, ප්‍රමාදයන් සහ හදිසි ආරක්ෂක උපකරණ භාවිතය (8.1–8.2)",
+              "printedPageStart": 87,
+              "printedPageEnd": 88,
+              "imageCount": 2
+            }
+          ]
+        },
+        {
+          "topicId": "ch02-t03",
+          "code": "2.3",
+          "titleEn": "Abnormal Weather, Heavy Rain & Earthquake Response",
+          "titleJa": "異常気象・大雨・地震発生時の対応",
+          "titleJaRuby": "異常気象[いじょうきしょう]・大雨[おおあめ]・地震[じしん]発生時[はっせいじ]の対応[たいおう]",
+          "titleSi": "අයහපත් කාලගුණය, තද වැසි, සුළං සහ භූමිකම්පා අවස්ථා කළමනාකරණය",
+          "startPage": 89,
+          "endPage": 94,
+          "sections": [
+            {
+              "sectionId": "ch02-t03-s1",
+              "code": "9.1–9.2",
+              "titleEn": "Abnormal Weather & Heavy Rain",
+              "titleJa": "異常気象と大雨時の対応",
+              "titleSi": "අයහපත් කාලගුණය, තද වැසි, සුළං සහ භූමිකම්පා අවස්ථා කළමනාකරණය (9.1–9.2)",
+              "printedPageStart": 89,
+              "printedPageEnd": 91,
+              "imageCount": 4
+            },
+            {
+              "sectionId": "ch02-t03-s2",
+              "code": "9.3–9.4",
+              "titleEn": "Earthquakes While Driving",
+              "titleJa": "地震・大地震発生時の運転行動",
+              "titleSi": "අයහපත් කාලගුණය, තද වැසි, සුළං සහ භූමිකම්පා අවස්ථා කළමනාකරණය (9.3–9.4)",
+              "printedPageStart": 92,
+              "printedPageEnd": 94,
+              "imageCount": 2
+            }
+          ]
+        },
+        {
+          "topicId": "ch02-t04",
+          "code": "2.4",
+          "titleEn": "Truck Structural Characteristics, Blind Spots & Speed",
+          "titleJa": "トラックの特性（高さ・長さ・幅・死角）と速度管理",
+          "titleJaRuby": "トラックの特性[とくせい]（高[たか]さ・長[なが]さ・幅[はば]・死角[しかく]）と速度管理[そくどかんり]",
+          "titleSi": "ට්‍රක් රථවල විශේෂ ලක්ෂණ (උස, දිග, පළල, අන්ධ කලාප) සහ වේග පාලනය",
+          "startPage": 95,
+          "endPage": 109,
+          "sections": [
+            {
+              "sectionId": "ch02-t04-s1",
+              "code": "10.1–10.3",
+              "titleEn": "Vehicle Height, Length (Inner Wheel Diff) & Width",
+              "titleJa": "車高・車長（内輪差）・車幅の特性",
+              "titleSi": "ට්‍රක් රථවල විශේෂ ලක්ෂණ (උස, දිග, පළල, අන්ධ කලාප) සහ වේග පාලනය (10.1–10.3)",
+              "printedPageStart": 95,
+              "printedPageEnd": 104,
+              "imageCount": 14
+            },
+            {
+              "sectionId": "ch02-t04-s2",
+              "code": "10.4",
+              "titleEn": "Truck Blind Spots",
+              "titleJa": "トラックの死角",
+              "titleSi": "ට්‍රක් රථවල විශේෂ ලක්ෂණ (උස, දිග, පළල, අන්ධ කලාප) සහ වේග පාලනය (10.4)",
+              "printedPageStart": 105,
+              "printedPageEnd": 106,
+              "imageCount": 3
+            },
+            {
+              "sectionId": "ch02-t04-s3",
+              "code": "11.1–11.2",
+              "titleEn": "Effects of Speed & Speed Control",
+              "titleJa": "速度が運転に与える影響と速度調整",
+              "titleSi": "ට්‍රක් රථවල විශේෂ ලක්ෂණ (උස, දිග, පළල, අන්ධ කලාප) සහ වේග පාලනය (11.1–11.2)",
+              "printedPageStart": 107,
+              "printedPageEnd": 109,
+              "imageCount": 3
+            }
+          ]
+        },
+        {
+          "topicId": "ch02-t05",
+          "code": "2.5",
+          "titleEn": "Interim Checks, Post-Operation Duties & Work Records",
+          "titleJa": "中間点呼・運行後業務・業務日報の記入",
+          "titleJaRuby": "中間点呼[ちゅうかんてんこ]・運行後[うんこうご]業務[ぎょうむ]・業務日報[ぎょうむにっぽう]の記入[きにゅう]",
+          "titleSi": "මැද-ධාවන පරීක්ෂාව, පසු-ධාවන රාජකාරි සහ දෛනික වැඩ වාර්තාව (業務日報)",
+          "startPage": 110,
+          "endPage": 114,
+          "sections": [
+            {
+              "sectionId": "ch02-t05-s1",
+              "code": "12",
+              "titleEn": "Mid-Operation Inspections (Interim Checks)",
+              "titleJa": "運行途中の確認（中間点呼）",
+              "titleSi": "මැද-ධාවන පරීක්ෂාව, පසු-ධාවන රාජකාරි සහ දෛනික වැඩ වාර්තාව (業務日報) (12)",
+              "printedPageStart": 110,
+              "printedPageEnd": 110,
+              "imageCount": 3
+            },
+            {
+              "sectionId": "ch02-t05-s2",
+              "code": "13.1–13.2",
+              "titleEn": "Vehicle Cleaning & Post-Operation Roll Call",
+              "titleJa": "洗車・清掃と乗務後点呼",
+              "titleSi": "මැද-ධාවන පරීක්ෂාව, පසු-ධාවන රාජකාරි සහ දෛනික වැඩ වාර්තාව (業務日報) (13.1–13.2)",
+              "printedPageStart": 111,
+              "printedPageEnd": 112,
+              "imageCount": 1
+            },
+            {
+              "sectionId": "ch02-t05-s3",
+              "code": "13.3",
+              "titleEn": "Daily Work Records (Gyomu Nippo)",
+              "titleJa": "業務日報（乗務等の記録）",
+              "titleSi": "මැද-ධාවන පරීක්ෂාව, පසු-ධාවන රාජකාරි සහ දෛනික වැඩ වාර්තාව (業務日報) (13.3)",
+              "printedPageStart": 113,
+              "printedPageEnd": 114,
+              "imageCount": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch-03",
+      "number": "03",
+      "titleEn": "Cargo Handling Operations",
+      "titleJa": "荷役業務",
+      "titleJaRuby": "荷役業務[にやくぎょうむ]",
+      "titleSi": "භාණ්ඩ පැටවීම සහ හැසිරවීමේ කටයුතු",
+      "printedRange": [
+        115,
+        173
+      ],
+      "enPdfRange": [
+        124,
+        182
+      ],
+      "jaPdfRange": [
+        125,
+        183
+      ],
+      "descriptionEn": "Cargo types, handling symbols, pallet loading patterns, cargo collapse prevention, lashing & re-inspection intervals, uneven loads, overloading law, roll box pallets, and forklift safety.",
+      "descriptionSi": "භාණ්ඩ වර්ග, පැලට් පැටවීම, භාණ්ඩ කඩා වැටීම වැළැක්වීම, බැඳ තැබීම, අධික බර තහනම, රෝල් බොක්ස් පැලට් සහ ෆෝක්ලිෆ්ට් ආරක්ෂාව.",
+      "topicCount": 4,
+      "sectionCount": 10,
+      "topics": [
+        {
+          "topicId": "ch03-t01",
+          "code": "3.1",
+          "titleEn": "Cargo Types, Handling Marks & Pallet Loading",
+          "titleJa": "貨物の種類・荷扱い表示・パレットの積付け",
+          "titleJaRuby": "貨物[かもつ]の種類[しゅるい]・荷扱[にあつか]い表示[ひょうじ]・パレットの積付[つみつ]け",
+          "titleSi": "භාණ්ඩ වර්ග, හැසිරවීමේ සලකුණු (Care Marks) සහ පැලට් (Pallet) පැටවීමේ ක්‍රම",
+          "startPage": 115,
+          "endPage": 129,
+          "sections": [
+            {
+              "sectionId": "ch03-t01-s1",
+              "code": "1–2.5",
+              "titleEn": "Importance of Proper Loading & Cargo Types",
+              "titleJa": "正しい積載と貨物の種類・荷姿",
+              "titleSi": "භාණ්ඩ වර්ග, හැසිරවීමේ සලකුණු (Care Marks) සහ පැලට් (Pallet) පැටවීමේ ක්‍රම (1–2.5)",
+              "printedPageStart": 115,
+              "printedPageEnd": 122,
+              "imageCount": 7
+            },
+            {
+              "sectionId": "ch03-t01-s2",
+              "code": "2.6",
+              "titleEn": "Cargo Handling Instruction Marks",
+              "titleJa": "貨物の荷扱い指示マーク",
+              "titleSi": "භාණ්ඩ වර්ග, හැසිරවීමේ සලකුණු (Care Marks) සහ පැලට් (Pallet) පැටවීමේ ක්‍රම (2.6)",
+              "printedPageStart": 123,
+              "printedPageEnd": 124,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "ch03-t01-s3",
+              "code": "3.1–3.2",
+              "titleEn": "Types and Loading Methods of Pallets",
+              "titleJa": "パレットの種類と積み方",
+              "titleSi": "භාණ්ඩ වර්ග, හැසිරවීමේ සලකුණු (Care Marks) සහ පැලට් (Pallet) පැටවීමේ ක්‍රම (3.1–3.2)",
+              "printedPageStart": 125,
+              "printedPageEnd": 129,
+              "imageCount": 3
+            }
+          ]
+        },
+        {
+          "topicId": "ch03-t02",
+          "code": "3.2",
+          "titleEn": "Preventing Cargo Collapse & Securement Methods",
+          "titleJa": "荷崩れ防止と貨物の固縛方法",
+          "titleJaRuby": "荷崩[にくず]れ防止[ぼうし]と貨物[かもつ]の固縛[こばく]方法[ほうほう]",
+          "titleSi": "භාණ්ඩ කඩා වැටීම (荷崩れ) වැළැක්වීම සහ භාණ්ඩ තදින් බැඳ තැබීමේ ක්‍රම",
+          "startPage": 130,
+          "endPage": 143,
+          "sections": [
+            {
+              "sectionId": "ch03-t02-s1",
+              "code": "4.1–4.3",
+              "titleEn": "Why Cargo Collapses & Safe Loading Patterns",
+              "titleJa": "荷崩れの原因と防止する積み方",
+              "titleSi": "භාණ්ඩ කඩා වැටීම (荷崩れ) වැළැක්වීම සහ භාණ්ඩ තදින් බැඳ තැබීමේ ක්‍රම (4.1–4.3)",
+              "printedPageStart": 130,
+              "printedPageEnd": 137,
+              "imageCount": 5
+            },
+            {
+              "sectionId": "ch03-t02-s2",
+              "code": "4.4–4.5",
+              "titleEn": "Securement Equipment & Re-Inspection Intervals",
+              "titleJa": "固縛用具と貨物の固定・増し締め",
+              "titleSi": "භාණ්ඩ කඩා වැටීම (荷崩れ) වැළැක්වීම සහ භාණ්ඩ තදින් බැඳ තැබීමේ ක්‍රම (4.4–4.5)",
+              "printedPageStart": 138,
+              "printedPageEnd": 143,
+              "imageCount": 3
+            }
+          ]
+        },
+        {
+          "topicId": "ch03-t03",
+          "code": "3.3",
+          "titleEn": "Uneven Load Distribution & Overloading Prevention",
+          "titleJa": "偏荷重の危険性と過積載の防止",
+          "titleJaRuby": "偏荷重[へんかじゅう]の危険性[きけんせい]と過積載[かせきさい]の防止[ぼうし]",
+          "titleSi": "අසමතුලිත බර පැටවීම (偏荷重) සහ අධික බර පැටවීමේ (過積載) අවදානම්",
+          "startPage": 144,
+          "endPage": 157,
+          "sections": [
+            {
+              "sectionId": "ch03-t03-s1",
+              "code": "5.1–5.4",
+              "titleEn": "Uneven Load Distribution & Dashcam Use",
+              "titleJa": "偏荷重の危険とドラレコ活用",
+              "titleSi": "අසමතුලිත බර පැටවීම (偏荷重) සහ අධික බර පැටවීමේ (過積載) අවදානම් (5.1–5.4)",
+              "printedPageStart": 144,
+              "printedPageEnd": 150,
+              "imageCount": 4
+            },
+            {
+              "sectionId": "ch03-t03-s2",
+              "code": "6.1–6.3",
+              "titleEn": "Overloading Impacts & Driver Responsibilities",
+              "titleJa": "過積載による事故・道路損傷と防止策",
+              "titleSi": "අසමතුලිත බර පැටවීම (偏荷重) සහ අධික බර පැටවීමේ (過積載) අවදානම් (6.1–6.3)",
+              "printedPageStart": 151,
+              "printedPageEnd": 157,
+              "imageCount": 7
+            }
+          ]
+        },
+        {
+          "topicId": "ch03-t04",
+          "code": "3.4",
+          "titleEn": "Workplace Accident Prevention, Roll Boxes & Forklifts",
+          "titleJa": "労働災害防止・ロールボックスパレット・フォークリフト",
+          "titleJaRuby": "労働災害[ろうどうさいがい]防止[ぼうし]・ロールボックスパレット・フォークリフト",
+          "titleSi": "සේවා ස්ථාන අනතුරු වැළැක්වීම, ටේල් ගේට්, රෝල් බොක්ස් පැලට් සහ ෆෝක්ලිෆ්ට් ආරක්ෂාව",
+          "startPage": 158,
+          "endPage": 173,
+          "sections": [
+            {
+              "sectionId": "ch03-t04-s1",
+              "code": "7.1–7.3",
+              "titleEn": "Loading Safety, Rope Tying & Sheet Covering",
+              "titleJa": "荷役作業の注意点・ロープ掛け・シート掛け",
+              "titleSi": "සේවා ස්ථාන අනතුරු වැළැක්වීම, ටේල් ගේට්, රෝල් බොක්ස් පැලට් සහ ෆෝක්ලිෆ්ට් ආරක්ෂාව (7.1–7.3)",
+              "printedPageStart": 158,
+              "printedPageEnd": 165,
+              "imageCount": 8
+            },
+            {
+              "sectionId": "ch03-t04-s2",
+              "code": "7.4–7.5",
+              "titleEn": "Box Truck Doors & Roll Box Pallets",
+              "titleJa": "バン型荷台とロールボックスパレット",
+              "titleSi": "සේවා ස්ථාන අනතුරු වැළැක්වීම, ටේල් ගේට්, රෝල් බොක්ස් පැලට් සහ ෆෝක්ලිෆ්ට් ආරක්ෂාව (7.4–7.5)",
+              "printedPageStart": 166,
+              "printedPageEnd": 169,
+              "imageCount": 4
+            },
+            {
+              "sectionId": "ch03-t04-s3",
+              "code": "8",
+              "titleEn": "Forklift Safety & Licensing Rules",
+              "titleJa": "フォークリフトの取扱い",
+              "titleSi": "සේවා ස්ථාන අනතුරු වැළැක්වීම, ටේල් ගේට්, රෝල් බොක්ස් පැලට් සහ ෆෝක්ලිෆ්ට් ආරක්ෂාව (8)",
+              "printedPageStart": 170,
+              "printedPageEnd": 173,
+              "imageCount": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch-04",
+      "number": "04",
+      "titleEn": "Hazard Prediction Training (KYT)",
+      "titleJa": "危険予知トレーニング（KYT）",
+      "titleJaRuby": "危険予知[きけんよち]トレーニング（KYT）",
+      "titleSi": "අනතුරු පුරෝකථන පුහුණුව (KYT)",
+      "printedRange": [
+        174,
+        232
+      ],
+      "enPdfRange": [
+        183,
+        240
+      ],
+      "jaPdfRange": [
+        184,
+        242
+      ],
+      "descriptionEn": "All 19 official KYT hazard prediction training sheets with cab-view scenarios, accident patterns, hazard factors, and safe driving methods.",
+      "descriptionSi": "නිල KYT අනතුරු පුරෝකථන පත්‍රිකා 19 සඳහා රියදුරු අසුනේ දර්ශන, අනතුරු සාධක සහ ආරක්ෂිත රිය පැදවීමේ උපක්‍රම.",
+      "topicCount": 4,
+      "sectionCount": 19,
+      "topics": [
+        {
+          "topicId": "ch04-t01",
+          "code": "4.1",
+          "titleEn": "KYT Sheets 1–5: Intersections, Signals & Downhill Curves",
+          "titleJa": "KYTシート1〜5（交差点・黄色信号・見通し不良・下りカーブ）",
+          "titleJaRuby": "KYTシート1〜5（交差点[こうさてん]・黄色信号[きいろしんごう]・見通[みとお]し不良[ふりょう]・下[くだ]りカーブ）",
+          "titleSi": "KYT පත්‍රිකා 1–5: මංසන්ධි, කහ සංඥා, දෘෂ්‍යතාව අඩු තැන් සහ පහළට බසින වංගු",
+          "startPage": 174,
+          "endPage": 189,
+          "sections": [
+            {
+              "sectionId": "kyt-01",
+              "code": "KYT 1",
+              "titleEn": "KYT Sheet 1: Traffic Light Intersection Left Turn",
+              "titleJa": "KYTシート1 信号機のある交差点の左折",
+              "titleSi": "KYT පත්‍රිකා 1–5: මංසන්ධි, කහ සංඥා, දෘෂ්‍යතාව අඩු තැන් සහ පහළට බසින වංගු (KYT 1)",
+              "printedPageStart": 174,
+              "printedPageEnd": 177,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-02",
+              "code": "KYT 2",
+              "titleEn": "KYT Sheet 2: Approaching a Yellow Traffic Light",
+              "titleJa": "KYTシート2 黄色信号への接近",
+              "titleSi": "KYT පත්‍රිකා 1–5: මංසන්ධි, කහ සංඥා, දෘෂ්‍යතාව අඩු තැන් සහ පහළට බසින වංගු (KYT 2)",
+              "printedPageStart": 178,
+              "printedPageEnd": 180,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-03",
+              "code": "KYT 3",
+              "titleEn": "KYT Sheet 3: Intersection With Poor Visibility",
+              "titleJa": "KYTシート3 見通しの悪い交差点",
+              "titleSi": "KYT පත්‍රිකා 1–5: මංසන්ධි, කහ සංඥා, දෘෂ්‍යතාව අඩු තැන් සහ පහළට බසින වංගු (KYT 3)",
+              "printedPageStart": 181,
+              "printedPageEnd": 183,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-04",
+              "code": "KYT 4",
+              "titleEn": "KYT Sheet 4: Roads Without Centerline",
+              "titleJa": "KYTシート4 中央線のない道路",
+              "titleSi": "KYT පත්‍රිකා 1–5: මංසන්ධි, කහ සංඥා, දෘෂ්‍යතාව අඩු තැන් සහ පහළට බසින වංගු (KYT 4)",
+              "printedPageStart": 184,
+              "printedPageEnd": 186,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-05",
+              "code": "KYT 5",
+              "titleEn": "KYT Sheet 5: Driving on a Downhill Curve",
+              "titleJa": "KYTシート5 下り坂のカーブ",
+              "titleSi": "KYT පත්‍රිකා 1–5: මංසන්ධි, කහ සංඥා, දෘෂ්‍යතාව අඩු තැන් සහ පහළට බසින වංගු (KYT 5)",
+              "printedPageStart": 187,
+              "printedPageEnd": 189,
+              "imageCount": 2
+            }
+          ]
+        },
+        {
+          "topicId": "ch04-t02",
+          "code": "4.2",
+          "titleEn": "KYT Sheets 6–10: Crosswalks, Parking, Rail & Highways",
+          "titleJa": "KYTシート6〜10（横断歩道・駐車場・踏切・雨天/渋滞高速）",
+          "titleJaRuby": "KYTシート6〜10（横断歩道[おうだんほどう]・駐車場[ちゅうしゃじょう]・踏切[ふみきり]・高速道路[こうそくどうろ]）",
+          "titleSi": "KYT පත්‍රිකා 6–10: පදික මාරු, වාහන නැවතුම්පොළ, දුම්රිය හරස් මාර්ග සහ අධිවේගී මාර්ග",
+          "startPage": 190,
+          "endPage": 204,
+          "sections": [
+            {
+              "sectionId": "kyt-06",
+              "code": "KYT 6",
+              "titleEn": "KYT Sheet 6: Driving Near Pedestrian Crosswalks",
+              "titleJa": "KYTシート6 横断歩道付近の走行",
+              "titleSi": "KYT පත්‍රිකා 6–10: පදික මාරු, වාහන නැවතුම්පොළ, දුම්රිය හරස් මාර්ග සහ අධිවේගී මාර්ග (KYT 6)",
+              "printedPageStart": 190,
+              "printedPageEnd": 192,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-07",
+              "code": "KYT 7",
+              "titleEn": "KYT Sheet 7: Parking Lot",
+              "titleJa": "KYTシート7 駐車場内",
+              "titleSi": "KYT පත්‍රිකා 6–10: පදික මාරු, වාහන නැවතුම්පොළ, දුම්රිය හරස් මාර්ග සහ අධිවේගී මාර්ග (KYT 7)",
+              "printedPageStart": 193,
+              "printedPageEnd": 195,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-08",
+              "code": "KYT 8",
+              "titleEn": "KYT Sheet 8: Railroad Crossing",
+              "titleJa": "KYTシート8 踏切の通過",
+              "titleSi": "KYT පත්‍රිකා 6–10: පදික මාරු, වාහන නැවතුම්පොළ, දුම්රිය හරස් මාර්ග සහ අධිවේගී මාර්ග (KYT 8)",
+              "printedPageStart": 196,
+              "printedPageEnd": 198,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-09",
+              "code": "KYT 9",
+              "titleEn": "KYT Sheet 9: Driving on a Rainy Highway",
+              "titleJa": "KYTシート9 雨の日の高速道路",
+              "titleSi": "KYT පත්‍රිකා 6–10: පදික මාරු, වාහන නැවතුම්පොළ, දුම්රිය හරස් මාර්ග සහ අධිවේගී මාර්ග (KYT 9)",
+              "printedPageStart": 199,
+              "printedPageEnd": 201,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-10",
+              "code": "KYT 10",
+              "titleEn": "KYT Sheet 10: Driving on a Congested Highway",
+              "titleJa": "KYTシート10 渋滞時の高速道路",
+              "titleSi": "KYT පත්‍රිකා 6–10: පදික මාරු, වාහන නැවතුම්පොළ, දුම්රිය හරස් මාර්ග සහ අධිවේගී මාර්ග (KYT 10)",
+              "printedPageStart": 202,
+              "printedPageEnd": 204,
+              "imageCount": 2
+            }
+          ]
+        },
+        {
+          "topicId": "ch04-t03",
+          "code": "4.3",
+          "titleEn": "KYT Sheets 11–15: Snow, Bike Lanes, Loading Zones & Turns",
+          "titleJa": "KYTシート11〜15（雪道・自転車道・荷捌き発進・右左折）",
+          "titleJaRuby": "KYTシート11〜15（雪道[ゆきみち]・自転車[じてんしゃ]・荷捌[にさば]き発進[はっしん]・右左折[うさせつ]）",
+          "titleSi": "KYT පත්‍රිකා 11–15: හිම මාර්ග, පාපැදි මංතීරු, පැටවුම් කලාප සහ දකුණ/වම හැරීම්",
+          "startPage": 205,
+          "endPage": 219,
+          "sections": [
+            {
+              "sectionId": "kyt-11",
+              "code": "KYT 11",
+              "titleEn": "KYT Sheet 11: Driving on Snowy Roads",
+              "titleJa": "KYTシート11 雪道の走行",
+              "titleSi": "KYT පත්‍රිකා 11–15: හිම මාර්ග, පාපැදි මංතීරු, පැටවුම් කලාප සහ දකුණ/වම හැරීම් (KYT 11)",
+              "printedPageStart": 205,
+              "printedPageEnd": 207,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-12",
+              "code": "KYT 12",
+              "titleEn": "KYT Sheet 12: Roads with Bicycle Lanes",
+              "titleJa": "KYTシート12 自転車専用通行帯のある道路",
+              "titleSi": "KYT පත්‍රිකා 11–15: හිම මාර්ග, පාපැදි මංතීරු, පැටවුම් කලාප සහ දකුණ/වම හැරීම් (KYT 12)",
+              "printedPageStart": 208,
+              "printedPageEnd": 210,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-13",
+              "code": "KYT 13",
+              "titleEn": "KYT Sheet 13: Starting from a Truck Loading Zone",
+              "titleJa": "KYTシート13 トラック専用荷捌き場からの発進",
+              "titleSi": "KYT පත්‍රිකා 11–15: හිම මාර්ග, පාපැදි මංතීරු, පැටවුම් කලාප සහ දකුණ/වම හැරීම් (KYT 13)",
+              "printedPageStart": 211,
+              "printedPageEnd": 213,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-14",
+              "code": "KYT 14",
+              "titleEn": "KYT Sheet 14: Turning Right at Signalized Intersection",
+              "titleJa": "KYTシート14 信号機のある交差点の右折",
+              "titleSi": "KYT පත්‍රිකා 11–15: හිම මාර්ග, පාපැදි මංතීරු, පැටවුම් කලාප සහ දකුණ/වම හැරීම් (KYT 14)",
+              "printedPageStart": 214,
+              "printedPageEnd": 216,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-15",
+              "code": "KYT 15",
+              "titleEn": "KYT Sheet 15: Turning Left at Signalized Intersection",
+              "titleJa": "KYTシート15 信号機のある交差点の左折",
+              "titleSi": "KYT පත්‍රිකා 11–15: හිම මාර්ග, පාපැදි මංතීරු, පැටවුම් කලාප සහ දකුණ/වම හැරීම් (KYT 15)",
+              "printedPageStart": 217,
+              "printedPageEnd": 219,
+              "imageCount": 2
+            }
+          ]
+        },
+        {
+          "topicId": "ch04-t04",
+          "code": "4.4",
+          "titleEn": "KYT Sheets 16–19: Residential, Night Highway, Bus Stop & 2-Lane",
+          "titleJa": "KYTシート16〜19（住宅街・夜間高速・バス停・片側2車線）",
+          "titleJaRuby": "KYTシート16〜19（住宅街[じゅうたくがい]・夜間高速[やかんこうそく]・バス停[てい]・片側[かたがわ]2車線[しゃせん]）",
+          "titleSi": "KYT පත්‍රිකා 16–19: නේවාසික ප්‍රදේශ, රාත්‍රී අධිවේගී, බස් නැවතුම් සහ ද්විත්ව මංතීරු",
+          "startPage": 220,
+          "endPage": 232,
+          "sections": [
+            {
+              "sectionId": "kyt-16",
+              "code": "KYT 16",
+              "titleEn": "KYT Sheet 16: Driving Through a Residential Area",
+              "titleJa": "KYTシート16 住宅街の走行",
+              "titleSi": "KYT පත්‍රිකා 16–19: නේවාසික ප්‍රදේශ, රාත්‍රී අධිවේගී, බස් නැවතුම් සහ ද්විත්ව මංතීරු (KYT 16)",
+              "printedPageStart": 220,
+              "printedPageEnd": 222,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-17",
+              "code": "KYT 17",
+              "titleEn": "KYT Sheet 17: Driving on a Highway at Night",
+              "titleJa": "KYTシート17 夜間の高速道路の走行",
+              "titleSi": "KYT පත්‍රිකා 16–19: නේවාසික ප්‍රදේශ, රාත්‍රී අධිවේගී, බස් නැවතුම් සහ ද්විත්ව මංතීරු (KYT 17)",
+              "printedPageStart": 223,
+              "printedPageEnd": 225,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-18",
+              "code": "KYT 18",
+              "titleEn": "KYT Sheet 18: Driving Past a Bus Stop",
+              "titleJa": "KYTシート18 バスの停留所のある道路の走行",
+              "titleSi": "KYT පත්‍රිකා 16–19: නේවාසික ප්‍රදේශ, රාත්‍රී අධිවේගී, බස් නැවතුම් සහ ද්විත්ව මංතීරු (KYT 18)",
+              "printedPageStart": 226,
+              "printedPageEnd": 228,
+              "imageCount": 2
+            },
+            {
+              "sectionId": "kyt-19",
+              "code": "KYT 19",
+              "titleEn": "KYT Sheet 19: Driving on a Two-Lane Road",
+              "titleJa": "KYTシート19 片側2車線の道路の走行",
+              "titleSi": "KYT පත්‍රිකා 16–19: නේවාසික ප්‍රදේශ, රාත්‍රී අධිවේගී, බස් නැවතුම් සහ ද්විත්ව මංතීරු (KYT 19)",
+              "printedPageStart": 229,
+              "printedPageEnd": 232,
+              "imageCount": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "papers": [
+    {
+      "paperId": "paper-01",
+      "paperNumber": 1,
+      "titleEn": "SSW Practice Paper 01",
+      "titleJa": "模擬試験 第1回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 01",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 33
+    },
+    {
+      "paperId": "paper-02",
+      "paperNumber": 2,
+      "titleEn": "SSW Practice Paper 02",
+      "titleJa": "模擬試験 第2回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 02",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 30
+    },
+    {
+      "paperId": "paper-03",
+      "paperNumber": 3,
+      "titleEn": "SSW Practice Paper 03",
+      "titleJa": "模擬試験 第3回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 03",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 31
+    },
+    {
+      "paperId": "paper-04",
+      "paperNumber": 4,
+      "titleEn": "SSW Practice Paper 04",
+      "titleJa": "模擬試験 第4回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 04",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 41
+    },
+    {
+      "paperId": "paper-05",
+      "paperNumber": 5,
+      "titleEn": "SSW Practice Paper 05",
+      "titleJa": "模擬試験 第5回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 05",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 40
+    },
+    {
+      "paperId": "paper-06",
+      "paperNumber": 6,
+      "titleEn": "SSW Practice Paper 06",
+      "titleJa": "模擬試験 第6回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 06",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 37
+    },
+    {
+      "paperId": "paper-07",
+      "paperNumber": 7,
+      "titleEn": "SSW Practice Paper 07",
+      "titleJa": "模擬試験 第7回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 07",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 38
+    },
+    {
+      "paperId": "paper-08",
+      "paperNumber": 8,
+      "titleEn": "SSW Practice Paper 08",
+      "titleJa": "模擬試験 第8回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 08",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 36
+    },
+    {
+      "paperId": "paper-09",
+      "paperNumber": 9,
+      "titleEn": "SSW Practice Paper 09",
+      "titleJa": "模擬試験 第9回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 09",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 37
+    },
+    {
+      "paperId": "paper-10",
+      "paperNumber": 10,
+      "titleEn": "SSW Practice Paper 10",
+      "titleJa": "模擬試験 第10回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 10",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 29
+    },
+    {
+      "paperId": "paper-11",
+      "paperNumber": 11,
+      "titleEn": "SSW Practice Paper 11",
+      "titleJa": "模擬試験 第11回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 11",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 38
+    },
+    {
+      "paperId": "paper-12",
+      "paperNumber": 12,
+      "titleEn": "SSW Practice Paper 12",
+      "titleJa": "模擬試験 第12回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 12",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 34
+    },
+    {
+      "paperId": "paper-13",
+      "paperNumber": 13,
+      "titleEn": "SSW Practice Paper 13",
+      "titleJa": "模擬試験 第13回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 13",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 36
+    },
+    {
+      "paperId": "paper-14",
+      "paperNumber": 14,
+      "titleEn": "SSW Practice Paper 14",
+      "titleJa": "模擬試験 第14回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 14",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 39
+    },
+    {
+      "paperId": "paper-15",
+      "paperNumber": 15,
+      "titleEn": "SSW Practice Paper 15",
+      "titleJa": "模擬試験 第15回",
+      "titleSi": "පුහුණු ප්‍රශ්න පත්‍රය 15",
+      "durationMinutes": 80,
+      "sectionACount": 30,
+      "sectionBCount": 20,
+      "totalQuestions": 50,
+      "imageQuestionsCount": 37
+    }
+  ],
+  "counts": {
+    "chapters": 4,
+    "topics": 18,
+    "sections": 62,
+    "vocabulary": 62,
+    "kanji": 48,
+    "images": 226,
+    "papers": 15,
+    "totalQuestionSlots": 750,
+    "imageBackedQuestions": 536
+  }
+}

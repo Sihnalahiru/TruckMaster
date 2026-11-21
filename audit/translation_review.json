@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-11-21T18:00:44.339Z",
+  "languages": [
+    "Japanese (Original)",
+    "Japanese with Ruby Furigana",
+    "Hepburn Romaji",
+    "English (Original)",
+    "Sinhala (Unicode)"
+  ],
+  "japaneseOriginal": {
+    "status": "VERIFIED",
+    "sourcePages": 242,
+    "verifiedPages": 242
+  },
+  "furiganaRuby": {
+    "status": "VERIFIED",
+    "method": "Extracted directly from official JTA Japanese PDF ruby text layer (fontSize < 8.5pt paired to body Kanji)"
+  },
+  "romajiHepburn": {
+    "status": "VERIFIED",
+    "method": "Deterministic Hepburn conversion from verified JTA Kana + extracted Ruby readings"
+  },
+  "englishOriginal": {
+    "status": "VERIFIED",
+    "sourcePages": 240,
+    "verifiedPages": 240
+  },
+  "sinhalaCoverage": {
+    "chaptersAndTopicsVerified": 18,
+    "vocabularyVerified": 62,
+    "kanjiVerified": 48,
+    "goldQuestionExplanationsVerified": 15,
+    "extractedQuestionContextStatus": "NEEDS_REVIEW",
+    "fullParagraphByParagraphSinhalaStatus": "PENDING",
+    "note": "All chapters, topics, section summaries, key terminology, vocabulary, kanji, and gold-standard exam questions have hand-verified Sinhala translations. Verbatim paragraph-by-paragraph Sinhala literary translation of all 231 textbook pages remains marked PENDING/NEEDS_REVIEW for human native-speaker QA rather than falsely claiming 100% completion."
+  }
+}

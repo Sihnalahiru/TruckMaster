@@ -1,8 +1,11 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-display: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Noto Sans JP", "Noto Sans Sinhala", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: "DM Sans", "Noto Sans JP", "Noto Sans Sinhala", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sinhala: "Noto Sans Sinhala", "DM Sans", sans-serif;
+  --font-jp: "Noto Sans JP", "DM Sans", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -10,6 +13,11 @@
   html {
     font-family: var(--font-sans);
     scroll-behavior: smooth;
+    font-size: calc(16px * var(--tm-font-scale, 1));
+  }
+
+  body {
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4 {
@@ -20,10 +28,54 @@
   a[href] {
     cursor: pointer;
   }
+
+  ruby {
+    ruby-align: center;
+    ruby-position: over;
+  }
+
+  rt {
+    font-family: var(--font-jp);
+    font-size: 0.62em;
+    font-weight: 500;
+    line-height: 1.1;
+    color: #475569;
+    user-select: none;
+  }
+
+  .dark rt {
+    color: #94a3b8;
+  }
+}
+
+.font-sinhala {
+  font-family: var(--font-sinhala);
+  line-height: 1.85;
+  letter-spacing: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.font-jp {
+  font-family: var(--font-jp);
+  line-height: 2.1;
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.tm-reduced-motion *,
+.tm-reduced-motion *::before,
+.tm-reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

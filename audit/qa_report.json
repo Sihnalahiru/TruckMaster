@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-11-21T18:00:44.342Z",
+  "overallStatus": "VERIFIED_WITH_EXPLICIT_EXCEPTIONS",
+  "sourceAudit": {
+    "englishPdfPages": 240,
+    "japanesePdfPages": 242,
+    "totalCombinedPdfPages": 482,
+    "verifiedPages": 481,
+    "needsReviewPages": 1,
+    "failedPages": 0
+  },
+  "visualsAudit": {
+    "totalImages": 226,
+    "visuallyInspectedVerified": 15,
+    "dimensionAndPageMappedPendingCaptionQA": 211,
+    "brokenAssets": 0
+  },
+  "cbtAudit": {
+    "totalPapers": 15,
+    "totalQuestionSlots": 750,
+    "theoryPerPaper": 30,
+    "practicalPerPaper": 20,
+    "duplicateQuestionCount": 0,
+    "missingSourceReferences": 0,
+    "imageBackedQuestions": 536
+  },
+  "lexiconAudit": {
+    "vocabularyCount": 62,
+    "kanjiCount": 48
+  },
+  "remainingExceptions": [
+    "BahasaKu Figma reference exports (.fig/PDF/PNG) were not present in the repository; provisional TruckMaster mobile-first design system was implemented.",
+    "Full paragraph-by-paragraph verbatim Sinhala translation for all 231 body pages and human linguistic QA on extracted-rule CBT Sinhala explanations remain marked PENDING/NEEDS_REVIEW (never falsely marked VERIFIED).",
+    "15 key diagrams were visually inspected and marked VERIFIED; the remaining 211 diagrams are dimension/page-mapped and marked PENDING for manual caption sign-off."
+  ]
+}
