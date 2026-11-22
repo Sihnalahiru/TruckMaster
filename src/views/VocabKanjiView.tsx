@@ -4,22 +4,30 @@ import {
   CheckCircle2,
   Layers,
   Search,
+  Volume2,
 } from 'lucide-react';
 import { loadKanji, loadVocabulary } from '../lib/contentLoader';
+import { speakJapanese } from '../lib/speech';
 import { RubyText } from '../components/RubyText';
 import type {
   KanjiItem,
   LearnerProgressState,
+  SmartRevisionItem,
   UserSettings,
   VocabItem,
 } from '../types/truckmaster';
+
+type RevisionSeed = Omit<
+  SmartRevisionItem,
+  'easeFactor' | 'intervalDays' | 'repetitions' | 'dueDate' | 'missCount' | 'addedAt'
+>;
 
 interface VocabKanjiViewProps {
   mode: 'vocabulary' | 'kanji';
   progress: LearnerProgressState;
   settings: UserSettings;
   onToggleMastered: (kind: 'vocab' | 'kanji', id: string, label: string) => void;
-  onToggleDifficult: (kind: 'vocab' | 'kanji', id: string) => void;
+  onToggleDifficult: (kind: 'vocab' | 'kanji', id: string, revisionSeed?: RevisionSeed) => void;
   onOpenFlashcards: () => void;
 }
 
@@ -95,6 +103,13 @@ export function VocabKanjiView({
   const difficultCount = isVocab ? progress.difficultVocabIds.length : progress.difficultKanjiIds.length;
   const dailyTarget = isVocab ? settings.dailyVocabTarget : settings.dailyKanjiTarget;
 
+  const playJapanese = (text: string, rate: number) => {
+    speakJapanese(text, {
+      rate,
+      voiceURI: settings.preferredJapaneseVoiceURI,
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header & Controls */}
@@ -104,7 +119,7 @@ export function VocabKanjiView({
             <p className="text-xs font-mono tabular-nums text-slate-500 dark:text-slate-400">
               <span>{masteredCount}/{totalCount} mastered</span>
               <span aria-hidden="true" className="mx-2">·</span>
-              <span>{difficultCount} marked difficult</span>
+              <span>{difficultCount} in Smart Revision</span>
               <span aria-hidden="true" className="mx-2">·</span>
               <span>Daily target: {dailyTarget}</span>
             </p>
@@ -113,8 +128,8 @@ export function VocabKanjiView({
             </h1>
             <p className="text-xs text-slate-600 dark:text-slate-400 font-sinhala mt-0.5">
               {isVocab
-                ? 'නිල පෙළපොතෙන් තෝරාගත් ට්‍රක් රථ සහ මාර්ග ආරක්ෂක වචන මාලාව'
-                : 'SSW විභාගයේ බහුලව භාවිතා වන ජපන් කන්ජි අක්ෂර සහ කියවීම්'}
+                ? 'නිල පෙළපොතෙන් තෝරාගත් ට්‍රක් රථ වචන මාලාව · ජපන් උච්චාරණය සමඟ'
+                : 'SSW විභාගයේ බහුලව භාවිතා වන ජපන් කන්ජි අක්ෂර සහ කියවීම් · අමාරු අක්ෂර Smart Revision වෙත එක් වේ'}
             </p>
           </div>
           <button
@@ -211,9 +226,43 @@ export function VocabKanjiView({
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
-                        onClick={() => onToggleDifficult('vocab', item.id)}
+                        onClick={() => playJapanese(item.japanese, 1.0)}
+                        aria-label={`Pronounce ${item.japanese}`}
+                        title="Play Japanese pronunciation"
+                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-[#0B4F8A] dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40 min-h-[40px] min-w-[40px] flex items-center justify-center"
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => playJapanese(item.japanese, 0.7)}
+                        aria-label={`Slowly pronounce ${item.japanese}`}
+                        title="Slow 0.7x pronunciation"
+                        className="px-2 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[40px]"
+                      >
+                        0.7x
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onToggleDifficult('vocab', item.id, {
+                            id: `vocab-${item.id}`,
+                            kind: 'vocab',
+                            refId: item.id,
+                            titleJa: item.japanese,
+                            romaji: `${item.furigana} · ${item.romaji}`,
+                            titleEn: item.english,
+                            titleSi: item.sinhala,
+                            answerEn: `${item.english} — ${item.exampleEn}`,
+                            answerSi: `${item.sinhala} — ${item.exampleSi}`,
+                            explanationSi: item.exampleSi,
+                            sourceLabel: `${item.category} · ${item.chapterId.toUpperCase()} p.${item.sourcePage}`,
+                            chapterId: item.chapterId,
+                          })
+                        }
                         aria-label={`Mark ${item.japanese} as difficult`}
                         aria-pressed={difficult}
+                        title="Flag difficult & add to Smart Revision"
                         className={`p-2 rounded-xl border min-h-[40px] min-w-[40px] flex items-center justify-center ${
                           difficult
                             ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300'
@@ -246,9 +295,19 @@ export function VocabKanjiView({
                   </div>
 
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 space-y-1 text-xs">
-                    <p className="text-slate-900 dark:text-slate-100">
-                      <RubyText markup={item.exampleRuby} showFurigana />
-                    </p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-slate-900 dark:text-slate-100">
+                        <RubyText markup={item.exampleRuby} showFurigana />
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => playJapanese(item.exampleRuby, 0.9)}
+                        aria-label="Play example sentence"
+                        className="p-1.5 rounded-lg text-[#0B4F8A] dark:text-sky-400 hover:bg-white dark:hover:bg-slate-800 shrink-0"
+                      >
+                        <Volume2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                     <p className="text-slate-600 dark:text-slate-300">{item.exampleEn}</p>
                     <p className="text-slate-600 dark:text-slate-400 font-sinhala">{item.exampleSi}</p>
                   </div>
@@ -262,6 +321,7 @@ export function VocabKanjiView({
           {filteredKanji.map((item) => {
             const mastered = progress.masteredKanjiIds.includes(item.id);
             const difficult = progress.difficultKanjiIds.includes(item.id);
+            const speakSample = item.examples[0]?.word || item.character;
             return (
               <article
                 key={item.id}
@@ -285,6 +345,15 @@ export function VocabKanjiView({
                   <div className="flex flex-col gap-1">
                     <button
                       type="button"
+                      onClick={() => playJapanese(speakSample, 0.9)}
+                      aria-label={`Pronounce Kanji ${item.character}`}
+                      title={`Pronounce ${speakSample}`}
+                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[#0B4F8A] dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40"
+                    >
+                      <Volume2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => onToggleMastered('kanji', item.id, item.character)}
                       aria-label={`Mark Kanji ${item.character} mastered`}
                       className={`p-1.5 rounded-lg border ${
@@ -297,8 +366,23 @@ export function VocabKanjiView({
                     </button>
                     <button
                       type="button"
-                      onClick={() => onToggleDifficult('kanji', item.id)}
+                      onClick={() =>
+                        onToggleDifficult('kanji', item.id, {
+                          id: `kanji-${item.id}`,
+                          kind: 'kanji',
+                          refId: item.id,
+                          titleJa: item.character,
+                          romaji: `On: ${item.onyomi} · Kun: ${item.kunyomi} (${item.romaji})`,
+                          titleEn: item.english,
+                          titleSi: item.sinhala,
+                          answerEn: `${item.english} · ${item.examples.map((e) => `${e.word} (${e.reading})`).join(', ')}`,
+                          answerSi: `${item.sinhala} · ${item.examples.map((e) => `${e.word}: ${e.si}`).join(' / ')}`,
+                          sourceLabel: `Kanji · ${item.chapterId.toUpperCase()} p.${item.sourcePage}`,
+                          chapterId: item.chapterId,
+                        })
+                      }
                       aria-label={`Mark Kanji ${item.character} difficult`}
+                      title="Flag forgotten Kanji & add to Smart Revision"
                       className={`p-1.5 rounded-lg border ${
                         difficult
                           ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-300 text-amber-700 dark:text-amber-300'
@@ -320,10 +404,16 @@ export function VocabKanjiView({
 
                 <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
                   {item.examples.map((ex, i) => (
-                    <div key={i} className="text-xs flex items-baseline justify-between gap-2">
-                      <span className="font-semibold text-slate-900 dark:text-white font-jp">
-                        {ex.word} <span className="font-normal text-slate-500">({ex.reading})</span>
-                      </span>
+                    <div key={i} className="text-xs flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => playJapanese(ex.word, 0.9)}
+                        className="font-semibold text-slate-900 dark:text-white font-jp hover:text-[#0B4F8A] dark:hover:text-sky-400 text-left inline-flex items-center gap-1"
+                      >
+                        <span>
+                          {ex.word} <span className="font-normal text-slate-500">({ex.reading})</span>
+                        </span>
+                      </button>
                       <span className="text-slate-600 dark:text-slate-400 text-right font-sinhala">
                         {ex.si}
                       </span>

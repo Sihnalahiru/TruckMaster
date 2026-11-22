@@ -9,15 +9,22 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { ContentManifest, LearnerProgressState } from '../types/truckmaster';
+import { ReadinessBreakdownCard } from '../components/ReadinessBreakdownCard';
+import type { AppRoute, ContentManifest, LearnerProgressState } from '../types/truckmaster';
 
 interface AnalyticsViewProps {
   manifest: ContentManifest;
   progress: LearnerProgressState;
   onOpenSection: (chapterId: string, sectionId: string) => void;
+  onNavigate: (route: AppRoute) => void;
 }
 
-export function AnalyticsView({ manifest, progress, onOpenSection }: AnalyticsViewProps) {
+export function AnalyticsView({
+  manifest,
+  progress,
+  onOpenSection,
+  onNavigate,
+}: AnalyticsViewProps) {
   // Build last 7 days study duration data from real sessions
   const dailyData = Array.from({ length: 7 }, (_, i) => {
     const dt = new Date();
@@ -131,6 +138,13 @@ export function AnalyticsView({ manifest, progress, onOpenSection }: AnalyticsVi
           </div>
         </div>
       </section>
+
+      <ReadinessBreakdownCard
+        manifest={manifest}
+        progress={progress}
+        onNavigate={onNavigate}
+        onOpenSection={onOpenSection}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Focused Study Minutes Bar Chart */}

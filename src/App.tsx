@@ -5,23 +5,28 @@ import {
   BookA,
   BookOpen,
   ClipboardCheck,
+  Compass,
   FileSearch,
+  Headphones,
   Home,
   Languages,
   Layers,
   Menu,
   Moon,
   RefreshCw,
+  Search,
   Settings,
   Shield,
+  ShieldAlert,
   ShieldCheck,
   Sun,
   Target,
   Trophy,
   Truck,
+  UserCircle2,
   X,
 } from 'lucide-react';
-import { loadManifest } from './lib/contentLoader';
+import { loadManifest, loadPaper } from './lib/contentLoader';
 import {
   DEFAULT_PROGRESS,
   DEFAULT_SETTINGS,
@@ -33,6 +38,8 @@ import {
 } from './lib/storage';
 import { playFeedbackTone } from './lib/sound';
 import { evaluateTrophies, getDriverRank, type TrophyDefinition } from './lib/gamification';
+import { DriverAvatarBadge } from './components/DriverAvatar';
+import { GlobalSearchModal } from './components/GlobalSearchModal';
 import { OfflineBanner, PWAInstallButton } from './components/PWAControls';
 import { TrophyUnlockModal, XpToastStack, type XpToastItem } from './components/RewardEffects';
 import { DailyTargetReminderToast, DailyTaskPopup } from './components/DailyTaskPopup';
@@ -46,6 +53,10 @@ import { AnalyticsView } from './views/AnalyticsView';
 import { DailyMissionsView } from './views/DailyMissionsView';
 import { SettingsView } from './views/SettingsView';
 import { AdminDashboardView, type ResetScope } from './views/AdminDashboardView';
+import { KytTrainingView } from './views/KytTrainingView';
+import { ScenarioSimulatorView } from './views/ScenarioSimulatorView';
+import { AudioLabView } from './views/AudioLabView';
+import { DriverProfileView } from './views/DriverProfileView';
 import type {
   ActivityEvent,
   AppRoute,
@@ -55,9 +66,16 @@ import type {
   InProgressExamState,
   LanguageDisplayPrefs,
   LearnerProgressState,
+  PersonalNoteItem,
+  SmartRevisionItem,
   StudySessionLog,
   UserSettings,
 } from './types/truckmaster';
+
+type RevisionSeed = Omit<
+  SmartRevisionItem,
+  'easeFactor' | 'intervalDays' | 'repetitions' | 'dueDate' | 'missCount' | 'addedAt'
+>;
 
 interface NavItem {
   id: AppRoute;
@@ -70,24 +88,32 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Driver Cab', shortLabel: 'Cab', group: 'learn', icon: Home },
   { id: 'study', label: 'Study Library', shortLabel: 'Study', group: 'learn', icon: BookOpen },
+  { id: 'kyt', label: 'KYT Hazard Lab', shortLabel: 'KYT', group: 'learn', icon: ShieldAlert },
+  { id: 'simulator', label: 'Scenario Simulator', shortLabel: 'Sim', group: 'learn', icon: Compass },
+  { id: 'audio', label: 'Audio Studio', shortLabel: 'Audio', group: 'learn', icon: Headphones },
   { id: 'vocabulary', label: 'Vocabulary', shortLabel: 'Vocab', group: 'learn', icon: Languages },
   { id: 'kanji', label: 'Kanji Drills', shortLabel: 'Kanji', group: 'learn', icon: BookA },
   { id: 'flashcards', label: 'Flashcards (SRS)', shortLabel: 'Cards', group: 'learn', icon: Layers },
   { id: 'cbt', label: 'CBT & Quiz', shortLabel: 'Quiz', group: 'exam', icon: ClipboardCheck },
-  { id: 'review', label: 'Review Centre', shortLabel: 'Review', group: 'exam', icon: FileSearch },
+  { id: 'review', label: 'Smart Revision', shortLabel: 'Review', group: 'exam', icon: FileSearch },
   { id: 'analytics', label: 'Analytics', shortLabel: 'Stats', group: 'exam', icon: BarChart3 },
   { id: 'missions', label: 'Daily Missions', shortLabel: 'Missions', group: 'exam', icon: Target },
+  { id: 'profile', label: 'Driver Profile', shortLabel: 'Profile', group: 'system', icon: UserCircle2 },
   { id: 'settings', label: 'Settings', shortLabel: 'Settings', group: 'system', icon: Settings },
   { id: 'admin', label: 'Admin & QA', shortLabel: 'Admin', group: 'system', icon: ShieldCheck },
 ];
 
-const MOBILE_PRIMARY_ROUTES: AppRoute[] = ['dashboard', 'study', 'flashcards', 'cbt'];
+const MOBILE_PRIMARY_ROUTES: AppRoute[] = ['dashboard', 'study', 'kyt', 'cbt'];
 const MOBILE_MORE_ROUTES: AppRoute[] = [
+  'simulator',
+  'audio',
+  'flashcards',
   'vocabulary',
   'kanji',
   'review',
   'analytics',
   'missions',
+  'profile',
   'settings',
   'admin',
 ];
@@ -120,10 +146,26 @@ export function App() {
   const [reviewAttemptId, setReviewAttemptId] = useState<string | null>(null);
   const [examActive, setExamActive] = useState(false);
   const [moreDrawerOpen, setMoreDrawerOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Daily Task Login Popup + Periodic Target Reminder Toast
   const [dailyPopupOpen, setDailyPopupOpen] = useState(false);
   const [reminderVisible, setReminderVisible] = useState(false);
+
+  // Keyboard shortcut Ctrl/Cmd + K for Global Trilingual Search
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        if (examActive) return;
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      } else if (e.key === 'Escape') {
+        setSearchOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [examActive]);
 
   // Gamification Effects: Floating XP Toasts & Trophy Celebration Modal
   const [xpToasts, setXpToasts] = useState<XpToastItem[]>([]);
@@ -436,26 +478,310 @@ export function App() {
     [settings.soundEnabled, triggerXpToast, updateProgress],
   );
 
+  const mergeRevisionSeed = useCallback(
+    (
+      queue: Record<string, SmartRevisionItem>,
+      seed: RevisionSeed,
+    ): Record<string, SmartRevisionItem> => {
+      const today = getTodayKey();
+      const existing = queue[seed.id];
+      return {
+        ...queue,
+        [seed.id]: existing
+          ? {
+              ...existing,
+              ...seed,
+              dueDate: today,
+              intervalDays: 1,
+              repetitions: 0,
+              missCount: existing.missCount + 1,
+            }
+          : {
+              ...seed,
+              easeFactor: 2.5,
+              intervalDays: 1,
+              repetitions: 0,
+              dueDate: today,
+              missCount: 1,
+              addedAt: new Date().toISOString(),
+            },
+      };
+    },
+    [],
+  );
+
   const handleToggleDifficult = useCallback(
-    (kind: 'vocab' | 'kanji', id: string) => {
+    (kind: 'vocab' | 'kanji', id: string, revisionSeed?: RevisionSeed) => {
+      let addedToRevision = false;
       updateProgress((prev) => {
+        const currentQueue = prev.revisionQueue || {};
         if (kind === 'vocab') {
           const exists = prev.difficultVocabIds.includes(id);
+          addedToRevision = !exists && Boolean(revisionSeed);
           return {
             ...prev,
             difficultVocabIds: exists
               ? prev.difficultVocabIds.filter((x) => x !== id)
               : [...prev.difficultVocabIds, id],
+            revisionQueue:
+              !exists && revisionSeed
+                ? mergeRevisionSeed(currentQueue, revisionSeed)
+                : currentQueue,
           };
         }
         const exists = prev.difficultKanjiIds.includes(id);
+        addedToRevision = !exists && Boolean(revisionSeed);
         return {
           ...prev,
           difficultKanjiIds: exists
             ? prev.difficultKanjiIds.filter((x) => x !== id)
             : [...prev.difficultKanjiIds, id],
+          revisionQueue:
+            !exists && revisionSeed
+              ? mergeRevisionSeed(currentQueue, revisionSeed)
+              : currentQueue,
         };
       });
+      if (addedToRevision) {
+        triggerXpToast(5, 'Added to Smart Revision Queue');
+      }
+      playFeedbackTone('tap', settings.soundEnabled);
+    },
+    [mergeRevisionSeed, settings.soundEnabled, triggerXpToast, updateProgress],
+  );
+
+  const handleRateRevisionItem = useCallback(
+    (itemId: string, rating: 'again' | 'hard' | 'good' | 'easy', label: string) => {
+      updateProgress((prev) => {
+        const queue = prev.revisionQueue || {};
+        const cur = queue[itemId];
+        if (!cur) return prev;
+
+        let ef = cur.easeFactor;
+        let reps = cur.repetitions;
+        let interval = cur.intervalDays;
+
+        if (rating === 'again') {
+          reps = 0;
+          interval = 1;
+          ef = Math.max(1.3, Number((ef - 0.2).toFixed(2)));
+        } else if (rating === 'hard') {
+          reps = Math.max(1, reps);
+          interval = Math.max(1, Math.round((interval || 1) * 1.2));
+          ef = Math.max(1.3, Number((ef - 0.15).toFixed(2)));
+        } else if (rating === 'good') {
+          reps += 1;
+          if (reps === 1) interval = 1;
+          else if (reps === 2) interval = 6;
+          else interval = Math.max(1, Math.round(interval * ef));
+        } else {
+          reps += 1;
+          interval = reps <= 1 ? 4 : Math.max(2, Math.round(interval * ef * 1.3));
+          ef = Math.min(3.0, Number((ef + 0.15).toFixed(2)));
+        }
+
+        return {
+          ...prev,
+          xp: prev.xp + 10,
+          revisionQueue: {
+            ...queue,
+            [itemId]: {
+              ...cur,
+              easeFactor: ef,
+              intervalDays: interval,
+              repetitions: reps,
+              dueDate: addDaysIso(interval),
+            },
+          },
+          recentActivities: [
+            makeActivity('revision', `Smart Revision: ${label} (${rating})`, 10),
+            ...prev.recentActivities,
+          ].slice(0, 40),
+        };
+      });
+      triggerXpToast(10, `Smart Revision: ${label}`);
+      playFeedbackTone(rating === 'again' ? 'wrong' : 'xp', settings.soundEnabled);
+    },
+    [settings.soundEnabled, triggerXpToast, updateProgress],
+  );
+
+  const handleCompleteKytScenario = useCallback(
+    (payload: {
+      scenarioId: string;
+      titleEn: string;
+      scorePct: number;
+      hotspotsFound: number;
+      hotspotsTotal: number;
+      missedItem?: RevisionSeed;
+    }) => {
+      const xpEarned = payload.scorePct >= 80 ? 35 : 20;
+      const nowIso = new Date().toISOString();
+      updateProgress((prev) => {
+        const existing = (prev.kytResults || {})[payload.scenarioId];
+        const nextQueue = payload.missedItem
+          ? mergeRevisionSeed(prev.revisionQueue || {}, payload.missedItem)
+          : prev.revisionQueue || {};
+        return {
+          ...prev,
+          xp: prev.xp + xpEarned,
+          kytResults: {
+            ...(prev.kytResults || {}),
+            [payload.scenarioId]: {
+              scenarioId: payload.scenarioId,
+              completedAt: nowIso,
+              bestScorePct: Math.max(existing?.bestScorePct || 0, payload.scorePct),
+              attempts: (existing?.attempts || 0) + 1,
+              hotspotsFound: payload.hotspotsFound,
+              hotspotsTotal: payload.hotspotsTotal,
+            },
+          },
+          revisionQueue: nextQueue,
+          recentActivities: [
+            makeActivity('kyt', `KYT Lab: ${payload.titleEn} (${payload.scorePct}%)`, xpEarned),
+            ...prev.recentActivities,
+          ].slice(0, 40),
+        };
+      });
+      triggerXpToast(xpEarned, `KYT Lab · ${payload.scorePct}%`);
+      playFeedbackTone(payload.scorePct >= 80 ? 'celebrate' : 'xp', settings.soundEnabled);
+    },
+    [mergeRevisionSeed, settings.soundEnabled, triggerXpToast, updateProgress],
+  );
+
+  const handleToggleBookmarkKyt = useCallback(
+    (scenarioId: string) => {
+      updateProgress((prev) => {
+        const list = prev.bookmarkedKytIds || [];
+        const exists = list.includes(scenarioId);
+        return {
+          ...prev,
+          bookmarkedKytIds: exists
+            ? list.filter((id) => id !== scenarioId)
+            : [...list, scenarioId],
+        };
+      });
+      playFeedbackTone('tap', settings.soundEnabled);
+    },
+    [settings.soundEnabled, updateProgress],
+  );
+
+  const handleCompleteSimulatorDecision = useCallback(
+    (payload: {
+      scenarioId: string;
+      titleEn: string;
+      outcome: 'safe' | 'caution' | 'danger';
+      missedItem?: RevisionSeed;
+    }) => {
+      const xpEarned = payload.outcome === 'safe' ? 30 : payload.outcome === 'caution' ? 15 : 10;
+      const rankScore = (o: 'safe' | 'caution' | 'danger') =>
+        o === 'safe' ? 3 : o === 'caution' ? 2 : 1;
+      const nowIso = new Date().toISOString();
+
+      updateProgress((prev) => {
+        const existing = (prev.simulatorResults || {})[payload.scenarioId];
+        const bestOutcome =
+          existing && rankScore(existing.bestOutcome) > rankScore(payload.outcome)
+            ? existing.bestOutcome
+            : payload.outcome;
+        const nextQueue = payload.missedItem
+          ? mergeRevisionSeed(prev.revisionQueue || {}, payload.missedItem)
+          : prev.revisionQueue || {};
+
+        return {
+          ...prev,
+          xp: prev.xp + xpEarned,
+          simulatorResults: {
+            ...(prev.simulatorResults || {}),
+            [payload.scenarioId]: {
+              scenarioId: payload.scenarioId,
+              completedAt: nowIso,
+              bestOutcome,
+              attempts: (existing?.attempts || 0) + 1,
+            },
+          },
+          revisionQueue: nextQueue,
+          recentActivities: [
+            makeActivity(
+              'simulator',
+              `Simulator: ${payload.titleEn} (${payload.outcome.toUpperCase()})`,
+              xpEarned,
+            ),
+            ...prev.recentActivities,
+          ].slice(0, 40),
+        };
+      });
+
+      triggerXpToast(xpEarned, `Simulator · ${payload.outcome.toUpperCase()}`);
+      playFeedbackTone(payload.outcome === 'safe' ? 'xp' : 'wrong', settings.soundEnabled);
+    },
+    [mergeRevisionSeed, settings.soundEnabled, triggerXpToast, updateProgress],
+  );
+
+  const handleRecordAudioDrill = useCallback(
+    (payload: {
+      mode: 'listening' | 'vocab-rec';
+      correct: boolean;
+      label: string;
+      missedVocab?: RevisionSeed;
+    }) => {
+      const xpEarned = payload.correct ? 10 : 3;
+      updateProgress((prev) => {
+        const nextQueue =
+          !payload.correct && payload.missedVocab
+            ? mergeRevisionSeed(prev.revisionQueue || {}, payload.missedVocab)
+            : prev.revisionQueue || {};
+        return {
+          ...prev,
+          xp: prev.xp + xpEarned,
+          audioListeningCompleted:
+            payload.mode === 'listening'
+              ? (prev.audioListeningCompleted || 0) + 1
+              : prev.audioListeningCompleted || 0,
+          audioVocabTotal:
+            payload.mode === 'vocab-rec'
+              ? (prev.audioVocabTotal || 0) + 1
+              : prev.audioVocabTotal || 0,
+          audioVocabCorrect:
+            payload.mode === 'vocab-rec' && payload.correct
+              ? (prev.audioVocabCorrect || 0) + 1
+              : prev.audioVocabCorrect || 0,
+          revisionQueue: nextQueue,
+          recentActivities: [
+            makeActivity('audio', `Audio Lab: ${payload.label}`, xpEarned),
+            ...prev.recentActivities,
+          ].slice(0, 40),
+        };
+      });
+      if (payload.correct) {
+        triggerXpToast(xpEarned, `Audio: ${payload.label}`);
+      }
+    },
+    [mergeRevisionSeed, triggerXpToast, updateProgress],
+  );
+
+  const handleSavePersonalNote = useCallback(
+    (note: PersonalNoteItem) => {
+      updateProgress((prev) => {
+        const list = prev.personalNotes || [];
+        const exists = list.some((n) => n.id === note.id);
+        return {
+          ...prev,
+          personalNotes: exists
+            ? list.map((n) => (n.id === note.id ? note : n))
+            : [note, ...list],
+        };
+      });
+      playFeedbackTone('success', settings.soundEnabled);
+    },
+    [settings.soundEnabled, updateProgress],
+  );
+
+  const handleDeletePersonalNote = useCallback(
+    (noteId: string) => {
+      updateProgress((prev) => ({
+        ...prev,
+        personalNotes: (prev.personalNotes || []).filter((n) => n.id !== noteId),
+      }));
       playFeedbackTone('tap', settings.soundEnabled);
     },
     [settings.soundEnabled, updateProgress],
@@ -578,8 +904,47 @@ export function App() {
         attempt.overallPassed ? `${attempt.paperTitle} PASSED!` : `${attempt.paperTitle} Submitted`,
       );
       playFeedbackTone(attempt.overallPassed ? 'celebrate' : 'success', settings.soundEnabled);
+
+      // Automatically enqueue every incorrectly answered CBT question into the Smart Revision Engine
+      loadPaper(attempt.paperId)
+        .then((paper) => {
+          const wrongSeeds: RevisionSeed[] = [];
+          for (const q of paper.questions) {
+            const chosen = attempt.answers[q.questionId];
+            if (chosen !== q.correctAnswer) {
+              const correctOpt = q.options.find((opt) => opt.id === q.correctAnswer);
+              wrongSeeds.push({
+                id: `q-${q.questionId}`,
+                kind: 'question',
+                refId: q.questionId,
+                titleJa: q.japanese,
+                titleRuby: q.japaneseRuby,
+                romaji: q.romaji,
+                titleEn: q.english,
+                titleSi: q.sinhala,
+                answerEn: correctOpt?.en || q.explanationEn,
+                answerSi: correctOpt?.si || q.explanationSi,
+                explanationSi: q.explanationSi,
+                sourceLabel: `${attempt.paperTitle} · Q${q.questionNumber} (p.${q.sourcePage})`,
+                chapterId: q.chapterId,
+                sectionId: q.sectionId,
+                imageSrc: q.imageSrc,
+              });
+            }
+          }
+          if (wrongSeeds.length > 0) {
+            updateProgress((prev) => {
+              let queue = prev.revisionQueue || {};
+              for (const seed of wrongSeeds) {
+                queue = mergeRevisionSeed(queue, seed);
+              }
+              return { ...prev, revisionQueue: queue };
+            });
+          }
+        })
+        .catch(() => {});
     },
-    [settings.soundEnabled, triggerXpToast, updateProgress],
+    [mergeRevisionSeed, settings.soundEnabled, triggerXpToast, updateProgress],
   );
 
   const handleToggleQuestionBookmark = useCallback(
@@ -734,10 +1099,16 @@ export function App() {
   );
 
   const { rank, progressPct: rankPct } = useMemo(() => getDriverRank(progress.xp), [progress.xp]);
+  const allTrophies = useMemo(() => evaluateTrophies(progress, settings), [progress, settings]);
   const unlockedTrophyCount = useMemo(
-    () => evaluateTrophies(progress, settings).filter((t) => t.unlocked).length,
-    [progress, settings],
+    () => allTrophies.filter((t) => t.unlocked).length,
+    [allTrophies],
   );
+  const totalTrophyCount = allTrophies.length;
+  const smartRevisionDueCount = useMemo(() => {
+    const today = getTodayKey();
+    return Object.values(progress.revisionQueue || {}).filter((i) => i.dueDate <= today).length;
+  }, [progress.revisionQueue]);
 
   const isMoreRouteActive = MOBILE_MORE_ROUTES.includes(route);
 
@@ -785,15 +1156,20 @@ export function App() {
         <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 lg:left-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-30">
           <div className="px-4 py-4 border-b border-slate-200 dark:border-slate-800 space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#0B4F8A] text-amber-300 flex items-center justify-center shrink-0 shadow-xs">
-                <Truck className="w-5 h-5" aria-hidden="true" />
-              </div>
+              <button
+                type="button"
+                onClick={() => handleNavigate('profile')}
+                aria-label="Open Driver Profile"
+                className="shrink-0 rounded-xl hover:opacity-90 transition-opacity"
+              >
+                <DriverAvatarBadge avatarId={settings.avatarId} size="sm" />
+              </button>
               <div className="min-w-0">
                 <p className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-slate-100 truncate">
                   TruckMaster
                 </p>
                 <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
-                  Japan SSW Driver App
+                  {settings.learnerName} · SSW
                 </p>
               </div>
             </div>
@@ -858,6 +1234,17 @@ export function App() {
                             Paused
                           </span>
                         )}
+                        {item.id === 'review' && smartRevisionDueCount > 0 && (
+                          <span
+                            className={`ml-auto text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                              active
+                                ? 'bg-white/20 text-white'
+                                : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+                            }`}
+                          >
+                            {smartRevisionDueCount}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -900,6 +1287,17 @@ export function App() {
             </button>
 
             <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  playFeedbackTone('tap', settings.soundEnabled);
+                  setSearchOpen(true);
+                }}
+                aria-label="Global trilingual search"
+                className="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300"
+              >
+                <Search className="w-4 h-4" aria-hidden="true" />
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -947,6 +1345,19 @@ export function App() {
                 type="button"
                 onClick={() => {
                   playFeedbackTone('tap', settings.soundEnabled);
+                  setSearchOpen(true);
+                }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-[#0B4F8A] transition-colors whitespace-nowrap"
+              >
+                <Search className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Search JP / EN / සිං</span>
+                <kbd className="text-[10px] font-mono text-slate-400">⌘K</kbd>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  playFeedbackTone('tap', settings.soundEnabled);
                   setDailyPopupOpen(true);
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/60 transition-colors whitespace-nowrap"
@@ -957,10 +1368,14 @@ export function App() {
                 </span>
               </button>
 
-              <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 font-mono">
+              <button
+                type="button"
+                onClick={() => handleNavigate('profile')}
+                className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 font-mono hover:text-[#0B4F8A] dark:hover:text-sky-400"
+              >
                 <Trophy className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
-                {unlockedTrophyCount}/10
-              </span>
+                {unlockedTrophyCount}/{totalTrophyCount}
+              </button>
 
               <span className="text-[#0B4F8A] dark:text-sky-300 font-mono font-bold">
                 {progress.xp} XP
@@ -1006,6 +1421,7 @@ export function App() {
               progress={progress}
               languagePrefs={settings.languagePrefs}
               soundEnabled={settings.soundEnabled}
+              preferredVoiceURI={settings.preferredJapaneseVoiceURI}
               initialChapterId={studyTarget.chapterId}
               initialSectionId={studyTarget.sectionId}
               onUpdateLanguagePrefs={handleUpdateLanguagePrefs}
@@ -1013,6 +1429,34 @@ export function App() {
               onToggleSectionBookmark={handleToggleSectionBookmark}
               onTrackLastVisited={handleTrackLastVisited}
               onGoToCbt={() => handleNavigate('cbt')}
+            />
+          )}
+
+          {route === 'kyt' && (
+            <KytTrainingView
+              progress={progress}
+              settings={settings}
+              onCompleteScenario={handleCompleteKytScenario}
+              onToggleBookmarkKyt={handleToggleBookmarkKyt}
+              onOpenStudySection={handleOpenSection}
+            />
+          )}
+
+          {route === 'simulator' && (
+            <ScenarioSimulatorView
+              progress={progress}
+              settings={settings}
+              onCompleteDecision={handleCompleteSimulatorDecision}
+              onOpenStudySection={handleOpenSection}
+            />
+          )}
+
+          {route === 'audio' && (
+            <AudioLabView
+              progress={progress}
+              settings={settings}
+              onUpdateSettings={updateSettings}
+              onRecordAudioDrill={handleRecordAudioDrill}
             />
           )}
 
@@ -1050,8 +1494,10 @@ export function App() {
           {route === 'review' && (
             <ReviewCenterView
               progress={progress}
+              settings={settings}
               initialAttemptId={reviewAttemptId}
               onToggleQuestionBookmark={handleToggleQuestionBookmark}
+              onRateRevisionItem={handleRateRevisionItem}
               onOpenStudySection={handleOpenSection}
               onGoToCbt={() => handleNavigate('cbt')}
             />
@@ -1062,6 +1508,7 @@ export function App() {
               manifest={manifest}
               progress={progress}
               onOpenSection={handleOpenSection}
+              onNavigate={handleNavigate}
             />
           )}
 
@@ -1071,6 +1518,20 @@ export function App() {
               settings={settings}
               onLogStudySession={handleLogStudySession}
               onToggleChecklistMission={handleToggleChecklistMission}
+            />
+          )}
+
+          {route === 'profile' && (
+            <DriverProfileView
+              manifest={manifest}
+              progress={progress}
+              settings={settings}
+              onUpdateSettings={updateSettings}
+              onSavePersonalNote={handleSavePersonalNote}
+              onDeletePersonalNote={handleDeletePersonalNote}
+              onRestoreBackup={handleRestoreBackup}
+              onOpenSection={handleOpenSection}
+              onNavigate={handleNavigate}
             />
           )}
 
@@ -1153,7 +1614,7 @@ export function App() {
                   TruckMaster Cab Menu
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Lv.{rank.level} {rank.titleEn} · {progress.xp} XP · {unlockedTrophyCount}/10 Trophies
+                  Lv.{rank.level} {rank.titleEn} · {progress.xp} XP · {unlockedTrophyCount}/{totalTrophyCount} Trophies
                 </p>
               </div>
               <button
@@ -1195,6 +1656,15 @@ export function App() {
           </div>
         </div>
       )}
+
+      {/* Global Trilingual Search Modal (Japanese / Romaji / English / Sinhala) */}
+      <GlobalSearchModal
+        open={searchOpen && !examActive}
+        manifest={manifest}
+        onClose={() => setSearchOpen(false)}
+        onOpenSection={handleOpenSection}
+        onNavigate={handleNavigate}
+      />
 
       {/* Daily Task Login Popup Menu */}
       <DailyTaskPopup

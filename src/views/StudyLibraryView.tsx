@@ -10,17 +10,21 @@ import {
   ClipboardCheck,
   Lightbulb,
   List,
+  Repeat,
   Search,
+  Volume2,
   X,
 } from 'lucide-react';
 import { loadChapter } from '../lib/contentLoader';
 import { playFeedbackTone } from '../lib/sound';
+import { speakJapanese, stopJapaneseSpeech } from '../lib/speech';
 import { ResilientImage } from '../components/ResilientImage';
 import { RubyText } from '../components/RubyText';
 import { HighwayTruckProgress } from '../components/RewardEffects';
 import type {
   ChapterData,
   ContentManifest,
+  JapaneseParagraph,
   LanguageDisplayPrefs,
   LearnerProgressState,
   StudySectionData,
@@ -31,6 +35,7 @@ interface StudyLibraryViewProps {
   progress: LearnerProgressState;
   languagePrefs: LanguageDisplayPrefs;
   soundEnabled: boolean;
+  preferredVoiceURI?: string;
   initialChapterId?: string;
   initialSectionId?: string;
   onUpdateLanguagePrefs: (prefs: LanguageDisplayPrefs) => void;
@@ -40,11 +45,97 @@ interface StudyLibraryViewProps {
   onGoToCbt: () => void;
 }
 
+interface AlignedUnit {
+  unitIndex: number;
+  jpItems: JapaneseParagraph[];
+  enItems: string[];
+  siItems: string[];
+}
+
+/**
+ * Aligns Japanese, English, and Sinhala paragraphs in exact sequential interlinear order
+ * so each sentence/paragraph unit renders:
+ * 1. Japanese + Furigana -> 2. Romaji -> 3. English -> 4. Sinhala
+ * with zero dropped paragraphs even when Japanese/English paragraph splits differ slightly.
+ */
+function buildAlignedUnits(
+  jpList: JapaneseParagraph[],
+  enList: string[],
+  siList: string[],
+): AlignedUnit[] {
+  const cleanEn = (enList || []).filter((p) => !/^\d+$/.test(String(p).trim()));
+  const cleanSi = siList || [];
+  const jpCount = jpList.length;
+  const enCount = cleanEn.length;
+  const siCount = cleanSi.length;
+  const targetCount = Math.max(enCount, siCount);
+
+  if (jpCount === 0 && targetCount === 0) return [];
+
+  if (targetCount === 0) {
+    return jpList.map((jp, idx) => ({
+      unitIndex: idx,
+      jpItems: [jp],
+      enItems: [],
+      siItems: [],
+    }));
+  }
+
+  if (jpCount === 0) {
+    return Array.from({ length: targetCount }, (_, idx) => ({
+      unitIndex: idx,
+      jpItems: [],
+      enItems: cleanEn[idx] ? [cleanEn[idx]] : [],
+      siItems: cleanSi[idx] ? [cleanSi[idx]] : [],
+    }));
+  }
+
+  // Exact 1-to-1 match
+  if (jpCount === targetCount) {
+    return Array.from({ length: targetCount }, (_, idx) => ({
+      unitIndex: idx,
+      jpItems: [jpList[idx]],
+      enItems: cleanEn[idx] ? [cleanEn[idx]] : [],
+      siItems: cleanSi[idx] ? [cleanSi[idx]] : [],
+    }));
+  }
+
+  // If more Japanese paragraphs than EN/SI, distribute Japanese paragraphs proportionally into targetCount units
+  if (jpCount > targetCount) {
+    const units: AlignedUnit[] = Array.from({ length: targetCount }, (_, idx) => ({
+      unitIndex: idx,
+      jpItems: [],
+      enItems: cleanEn[idx] ? [cleanEn[idx]] : [],
+      siItems: cleanSi[idx] ? [cleanSi[idx]] : [],
+    }));
+    for (let i = 0; i < jpCount; i++) {
+      const bucket = Math.min(targetCount - 1, Math.floor((i * targetCount) / jpCount));
+      units[bucket].jpItems.push(jpList[i]);
+    }
+    return units;
+  }
+
+  // If more EN/SI paragraphs than Japanese, distribute EN/SI proportionally into jpCount units
+  const units: AlignedUnit[] = Array.from({ length: jpCount }, (_, idx) => ({
+    unitIndex: idx,
+    jpItems: [jpList[idx]],
+    enItems: [],
+    siItems: [],
+  }));
+  for (let i = 0; i < targetCount; i++) {
+    const bucket = Math.min(jpCount - 1, Math.floor((i * jpCount) / targetCount));
+    if (cleanEn[i]) units[bucket].enItems.push(cleanEn[i]);
+    if (cleanSi[i]) units[bucket].siItems.push(cleanSi[i]);
+  }
+  return units;
+}
+
 export function StudyLibraryView({
   manifest,
   progress,
   languagePrefs,
   soundEnabled,
+  preferredVoiceURI,
   initialChapterId,
   initialSectionId,
   onUpdateLanguagePrefs,
@@ -65,6 +156,11 @@ export function StudyLibraryView({
   const [searchQuery, setSearchQuery] = useState('');
   const [topicDrawerOpen, setTopicDrawerOpen] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<{ src: string; caption: string } | null>(null);
+  const [speakingKey, setSpeakingKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => stopJapaneseSpeech();
+  }, []);
 
   useEffect(() => {
     if (initialChapterId) setChapterId(initialChapterId);
@@ -113,7 +209,6 @@ export function StudyLibraryView({
     }
   }, [chapterId, activeSection?.sectionId]);
 
-  // Global search across all 62 sections
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
@@ -174,17 +269,34 @@ export function StudyLibraryView({
   };
 
   const selectSection = (nextSectionId: string) => {
+    stopJapaneseSpeech();
+    setSpeakingKey(null);
     playFeedbackTone('nav', soundEnabled);
     setSectionId(nextSectionId);
     setTopicDrawerOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handlePlaySentence = (key: string, text: string, rate: number, repeatCount = 1) => {
+    if (speakingKey === key) {
+      stopJapaneseSpeech();
+      setSpeakingKey(null);
+      return;
+    }
+    speakJapanese(text, {
+      rate,
+      repeatCount,
+      voiceURI: preferredVoiceURI,
+      onStart: () => setSpeakingKey(key),
+      onEnd: () => setSpeakingKey(null),
+      onError: () => setSpeakingKey(null),
+    });
+  };
+
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
       {/* Compact Portrait-First Chapter & Lesson Navigator Card */}
       <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
-        {/* 4-Chapter Horizontal Quick Tabs */}
         <div
           className="grid grid-cols-2 sm:grid-cols-4 gap-2"
           role="tablist"
@@ -201,6 +313,7 @@ export function StudyLibraryView({
                 role="tab"
                 aria-selected={active}
                 onClick={() => {
+                  stopJapaneseSpeech();
                   playFeedbackTone('nav', soundEnabled);
                   setChapterId(ch.id);
                   if (secIds[0]) setSectionId(secIds[0]);
@@ -225,7 +338,7 @@ export function StudyLibraryView({
           })}
         </div>
 
-        {/* One-Tap Portrait Section Switcher Bar (Replaces cramped sidebar!) */}
+        {/* One-Tap Portrait Section Switcher Bar */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -278,43 +391,47 @@ export function StudyLibraryView({
           </button>
         </div>
 
-        {/* Highway Route Progress for Active Chapter */}
         <HighwayTruckProgress
           percent={chapterPct}
           leftLabel={`Chapter Route Progress (${chapterDoneCount}/${chapterSecIds.length} sections)`}
           rightLabel={`${chapterPct}%`}
         />
 
-        {/* 5-Language Instant Toggle Bar (All 5 Languages Always Available) */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-          {(
-            [
-              ['showSinhala', 'සිංහල'],
-              ['showJapanese', '日本語'],
-              ['showFurigana', 'ふりがな'],
-              ['showRomaji', 'Romaji'],
-              ['showEnglish', 'English'],
-            ] as Array<[keyof LanguageDisplayPrefs, string]>
-          ).map(([key, label]) => {
-            const on = languagePrefs[key];
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => toggleLang(key)}
-                aria-pressed={on}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-colors whitespace-nowrap shrink-0 min-h-[36px] tm-card-press ${
-                  on
-                    ? key === 'showSinhala'
-                      ? 'bg-[#0D7A5F] text-white border-[#0D7A5F]'
-                      : 'bg-slate-900 dark:bg-sky-500 text-white border-slate-900 dark:border-sky-500'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
+        {/* 5-Language Instant Toggle Bar (Order: Japanese+Furigana -> Romaji -> English -> Sinhala) */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {(
+              [
+                ['showJapanese', '日本語'],
+                ['showFurigana', 'ふりがな'],
+                ['showRomaji', 'Romaji'],
+                ['showEnglish', 'English'],
+                ['showSinhala', 'සිංහල'],
+              ] as Array<[keyof LanguageDisplayPrefs, string]>
+            ).map(([key, label]) => {
+              const on = languagePrefs[key];
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleLang(key)}
+                  aria-pressed={on}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-colors whitespace-nowrap shrink-0 min-h-[36px] tm-card-press ${
+                    on
+                      ? key === 'showSinhala'
+                        ? 'bg-[#0D7A5F] text-white border-[#0D7A5F]'
+                        : 'bg-slate-900 dark:bg-sky-500 text-white border-slate-900 dark:border-sky-500'
+                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            Interlinear: 日本語 → Romaji → English → සිංහල
+          </p>
         </div>
       </section>
 
@@ -371,14 +488,14 @@ export function StudyLibraryView({
               </div>
 
               <div className="space-y-1.5">
-                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white [text-wrap:balance]">
-                  {activeSection.titleEn}
-                </h1>
                 {languagePrefs.showJapanese && (
-                  <p className="text-base font-semibold text-slate-700 dark:text-slate-300 font-jp">
+                  <p className="text-base font-bold text-[#0B4F8A] dark:text-sky-400">
                     {activeSection.titleJa}
                   </p>
                 )}
+                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white [text-wrap:balance]">
+                  {activeSection.titleEn}
+                </h1>
                 {languagePrefs.showSinhala && (
                   <p className="text-sm font-bold text-[#0D7A5F] dark:text-emerald-400 font-sinhala">
                     {activeSection.titleSi}
@@ -386,7 +503,6 @@ export function StudyLibraryView({
                 )}
               </div>
 
-              {/* Sinhala Topic Overview */}
               {languagePrefs.showSinhala && (
                 <div className="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900 space-y-1">
                   <p className="text-xs font-bold text-[#0D7A5F] dark:text-emerald-300">
@@ -398,7 +514,6 @@ export function StudyLibraryView({
                 </div>
               )}
 
-              {/* Warnings & Exam Tips */}
               {(activeSection.warnings.length > 0 || activeSection.examTips.length > 0) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                   {activeSection.warnings.length > 0 && (
@@ -431,12 +546,14 @@ export function StudyLibraryView({
               )}
             </div>
 
-            {/* Extracted Textbook Pages — Complete 5-Language Cards (Japanese + Furigana + Romaji + English + FULL SINHALA) */}
+            {/* Extracted Textbook Pages — INTERLINEAR Sentence/Paragraph Order:
+                1. Japanese + Furigana (+ Audio) -> 2. Romaji -> 3. English -> 4. Sinhala */}
             {activeSection.pages.map((pg) => {
-              const cleanEnglish = (pg.englishParagraphs || []).filter(
-                (p) => !/^\d+$/.test(String(p).trim()),
+              const alignedUnits = buildAlignedUnits(
+                pg.japaneseParagraphs || [],
+                pg.englishParagraphs || [],
+                pg.sinhalaParagraphs || [],
               );
-              const sinhalaParas = pg.sinhalaParagraphs || [];
 
               return (
                 <section
@@ -448,7 +565,8 @@ export function StudyLibraryView({
                       Textbook Page {pg.printedPage}
                     </span>
                     <span className="font-mono tabular-nums">
-                      {pg.images.length > 0 ? `${pg.images.length} diagram${pg.images.length > 1 ? 's' : ''}` : 'Text page'}
+                      {alignedUnits.length} unit{alignedUnits.length !== 1 ? 's' : ''}
+                      {pg.images.length > 0 ? ` · ${pg.images.length} diagram${pg.images.length > 1 ? 's' : ''}` : ''}
                     </span>
                   </div>
 
@@ -480,13 +598,11 @@ export function StudyLibraryView({
                               />
                             </button>
                             <figcaption className="mt-2.5 text-center space-y-0.5 text-xs">
-                              {languagePrefs.showEnglish && (
-                                <p className="font-medium text-slate-700 dark:text-slate-300">
-                                  {im.captionEn}
-                                </p>
-                              )}
                               {languagePrefs.showJapanese && (
-                                <p className="text-slate-500 dark:text-slate-400">{im.captionJa}</p>
+                                <p className="text-slate-600 dark:text-slate-300 font-medium">{im.captionJa}</p>
+                              )}
+                              {languagePrefs.showEnglish && (
+                                <p className="text-slate-600 dark:text-slate-400">{im.captionEn}</p>
                               )}
                               {languagePrefs.showSinhala && (
                                 <p className="text-[#0D7A5F] dark:text-emerald-400 font-sinhala font-medium">
@@ -500,87 +616,152 @@ export function StudyLibraryView({
                     </div>
                   )}
 
-                  {/* Full 5-Language Page Content (Portrait-First Comfortable Stack) */}
-                  <div className="p-4 sm:p-6 space-y-5">
-                    {/* 1. Original Japanese + Furigana + Romaji */}
-                    {(languagePrefs.showJapanese || languagePrefs.showRomaji) && (
-                      <div className="space-y-3">
-                        <p className="text-xs font-bold text-[#0B4F8A] dark:text-sky-400">
-                          日本語 {languagePrefs.showFurigana ? '+ ふりがな (Official JTA)' : ''}
-                        </p>
-                        {pg.japaneseParagraphs.length === 0 ? (
-                          <p className="text-xs text-slate-400 italic">Illustration page</p>
-                        ) : (
-                          pg.japaneseParagraphs.map((jp, idx) => (
-                            <div key={idx} className="space-y-1">
-                              {languagePrefs.showJapanese && (
-                                <p className="text-[15px] text-slate-900 dark:text-slate-100 leading-loose">
-                                  <RubyText
-                                    markup={jp.rubyMarkup}
-                                    showFurigana={languagePrefs.showFurigana}
-                                  />
-                                </p>
-                              )}
-                              {languagePrefs.showRomaji && jp.romaji && (
-                                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                                  {jp.romaji}
-                                </p>
+                  {/* Interlinear Aligned Sentence / Paragraph Stack */}
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {alignedUnits.length === 0 ? (
+                      <div className="p-5 text-xs text-slate-400 italic text-center">
+                        Illustration page
+                      </div>
+                    ) : (
+                      alignedUnits.map((unit) => {
+                        const unitKey = `p${pg.printedPage}-u${unit.unitIndex}`;
+                        const jpSpeechText = unit.jpItems.map((j) => j.plain).join(' ');
+                        const isPlayingNormal = speakingKey === `${unitKey}-norm`;
+                        const isPlayingSlow = speakingKey === `${unitKey}-slow`;
+                        const isPlayingRepeat = speakingKey === `${unitKey}-rep`;
+
+                        return (
+                          <div
+                            key={unitKey}
+                            className="p-4 sm:p-6 space-y-3"
+                          >
+                            {/* Compact Unit Header + Inline Japanese TTS Audio Controls */}
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="text-[11px] font-mono tabular-nums text-slate-400 dark:text-slate-500">
+                                p.{pg.printedPage} · #{unit.unitIndex + 1}
+                              </span>
+
+                              {jpSpeechText && (
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handlePlaySentence(`${unitKey}-norm`, jpSpeechText, 0.95, 1)
+                                    }
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg border transition-colors whitespace-nowrap min-h-[32px] ${
+                                      isPlayingNormal
+                                        ? 'bg-[#0B4F8A] text-white border-[#0B4F8A]'
+                                        : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-[#0B4F8A]'
+                                    }`}
+                                    aria-label="Listen in Japanese normal speed"
+                                  >
+                                    <Volume2 className="w-3.5 h-3.5" aria-hidden="true" />
+                                    <span>{isPlayingNormal ? 'Stop' : 'Listen'}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handlePlaySentence(`${unitKey}-slow`, jpSpeechText, 0.68, 1)
+                                    }
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg border transition-colors whitespace-nowrap min-h-[32px] ${
+                                      isPlayingSlow
+                                        ? 'bg-amber-500 text-slate-950 border-amber-500'
+                                        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-amber-500'
+                                    }`}
+                                    aria-label="Listen slowly"
+                                  >
+                                    <span>0.7x</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handlePlaySentence(`${unitKey}-rep`, jpSpeechText, 0.9, 2)
+                                    }
+                                    className={`inline-flex items-center gap-1 px-2 py-1 text-[11px] font-bold rounded-lg border transition-colors whitespace-nowrap min-h-[32px] ${
+                                      isPlayingRepeat
+                                        ? 'bg-[#0D7A5F] text-white border-[#0D7A5F]'
+                                        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-[#0D7A5F]'
+                                    }`}
+                                    aria-label="Repeat sentence twice"
+                                  >
+                                    <Repeat className="w-3 h-3" aria-hidden="true" />
+                                    <span>2x</span>
+                                  </button>
+                                </div>
                               )}
                             </div>
-                          ))
-                        )}
-                      </div>
-                    )}
 
-                    {/* 2. FULL SINHALA PAGE TRANSLATION */}
-                    {languagePrefs.showSinhala && (
-                      <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/25 border border-emerald-200/70 dark:border-emerald-900/70 space-y-2.5">
-                        <p className="text-xs font-bold text-[#0D7A5F] dark:text-emerald-300">
-                          සිංහල පරිවර්තනය · Sinhala Textbook Translation
-                        </p>
-                        {sinhalaParas.length > 0 ? (
-                          sinhalaParas.map((siPara, idx) => (
-                            <p
-                              key={idx}
-                              className="text-[15px] text-slate-900 dark:text-slate-100 font-sinhala"
-                            >
-                              {siPara}
-                            </p>
-                          ))
-                        ) : (
-                          <p className="text-sm text-slate-700 dark:text-slate-300 font-sinhala">
-                            {activeSection.sinhalaSummary}
-                          </p>
-                        )}
-                      </div>
-                    )}
+                            {/* 1. Japanese + Furigana */}
+                            {languagePrefs.showJapanese && unit.jpItems.length > 0 && (
+                              <div className="space-y-1.5">
+                                {unit.jpItems.map((jp, idx) => (
+                                  <p
+                                    key={idx}
+                                    className="text-[16px] font-medium text-slate-900 dark:text-slate-100 leading-loose"
+                                  >
+                                    <RubyText
+                                      markup={jp.rubyMarkup}
+                                      showFurigana={languagePrefs.showFurigana}
+                                    />
+                                  </p>
+                                ))}
+                              </div>
+                            )}
 
-                    {/* 3. Original English Textbook */}
-                    {languagePrefs.showEnglish && (
-                      <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                          Original English Textbook
-                        </p>
-                        {cleanEnglish.length === 0 ? (
-                          <p className="text-xs text-slate-400 italic">Illustration page</p>
-                        ) : (
-                          cleanEnglish.map((enPara, idx) => (
-                            <p
-                              key={idx}
-                              className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed"
-                            >
-                              {enPara}
-                            </p>
-                          ))
-                        )}
-                      </div>
+                            {/* 2. Romaji */}
+                            {languagePrefs.showRomaji && unit.jpItems.some((j) => j.romaji) && (
+                              <div className="space-y-1">
+                                {unit.jpItems.map(
+                                  (jp, idx) =>
+                                    jp.romaji && (
+                                      <p
+                                        key={idx}
+                                        className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed"
+                                      >
+                                        {jp.romaji}
+                                      </p>
+                                    ),
+                                )}
+                              </div>
+                            )}
+
+                            {/* 3. English */}
+                            {languagePrefs.showEnglish && unit.enItems.length > 0 && (
+                              <div className="space-y-1 pt-1">
+                                {unit.enItems.map((enText, idx) => (
+                                  <p
+                                    key={idx}
+                                    className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed"
+                                  >
+                                    {enText}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* 4. Sinhala — Immediately attached to this exact sentence/paragraph! */}
+                            {languagePrefs.showSinhala && unit.siItems.length > 0 && (
+                              <div className="p-3.5 rounded-xl bg-emerald-50/55 dark:bg-emerald-950/25 border border-emerald-200/70 dark:border-emerald-900/60 space-y-1">
+                                {unit.siItems.map((siText, idx) => (
+                                  <p
+                                    key={idx}
+                                    className="text-[15px] font-medium text-slate-900 dark:text-emerald-100 font-sinhala leading-relaxed"
+                                  >
+                                    {siText}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                 </section>
               );
             })}
 
-            {/* Clean Bottom Lesson Pager + Quick CBT Jump (No Unnecessary Notes Box!) */}
+            {/* Clean Bottom Lesson Pager + Quick CBT Jump */}
             <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
               <div className="flex items-center justify-between gap-2.5">
                 <button

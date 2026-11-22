@@ -111,7 +111,17 @@ export function evaluateTrophies(
   );
   const attemptsCount = progress.examAttempts.length;
   const passedCount = progress.examAttempts.filter((a) => a.overallPassed).length;
-  const kytDone = progress.completedSectionIds.some((id) => id.startsWith('kyt-') || id.startsWith('ch04-'));
+  const kytLabCount = Object.values(progress.kytResults || {}).filter((r) => r.bestScorePct >= 70).length;
+  const kytDone =
+    kytLabCount >= 1 ||
+    progress.completedSectionIds.some((id) => id.startsWith('kyt-') || id.startsWith('ch04-'));
+  const simSafeCount = Object.values(progress.simulatorResults || {}).filter(
+    (r) => r.bestOutcome === 'safe',
+  ).length;
+  const audioCount = (progress.audioListeningCompleted || 0) + (progress.audioVocabCorrect || 0);
+  const revisionCleared = Object.values(progress.revisionQueue || {}).filter(
+    (r) => r.repetitions >= 2,
+  ).length;
 
   return [
     {
@@ -163,10 +173,46 @@ export function evaluateTrophies(
       id: 'kyt-spotter',
       titleEn: 'KYT Hazard Spotter',
       titleSi: 'KYT අනතුරු පුරෝකථන ශූරයා',
-      descEn: 'Complete a Chapter 4 KYT hazard sheet',
+      descEn: 'Complete a KYT Hazard Training scenario',
       tier: 'silver',
       unlocked: kytDone,
       progressLabel: kytDone ? '1/1' : '0/1',
+    },
+    {
+      id: 'kyt-master',
+      titleEn: 'KYT 5-Scene Ace',
+      titleSi: 'KYT දර්ශන 5 ආරක්ෂක ශූරයා',
+      descEn: 'Score 70%+ on 5 interactive KYT hotspot scenes',
+      tier: 'gold',
+      unlocked: kytLabCount >= 5,
+      progressLabel: `${Math.min(kytLabCount, 5)}/5`,
+    },
+    {
+      id: 'sim-captain',
+      titleEn: 'Safe Decision Captain',
+      titleSi: 'ආරක්ෂිත තීරණ ට්‍රක් නියමු',
+      descEn: 'Pass 5 Truck Driver Simulator scenarios safely',
+      tier: 'gold',
+      unlocked: simSafeCount >= 5,
+      progressLabel: `${Math.min(simSafeCount, 5)}/5`,
+    },
+    {
+      id: 'audio-ear',
+      titleEn: 'Japanese Audio Pro',
+      titleSi: 'ජපන් ශ්‍රවණ පුහුණු ශූරයා',
+      descEn: 'Complete 10 listening or audio vocab drills',
+      tier: 'silver',
+      unlocked: audioCount >= 10,
+      progressLabel: `${Math.min(audioCount, 10)}/10`,
+    },
+    {
+      id: 'smart-reviser',
+      titleEn: 'Smart Revision Ace',
+      titleSi: 'ස්මාර්ට් පුනරීක්ෂණ ප්‍රවීණයා',
+      descEn: 'Master 5 items from your Smart Revision Queue',
+      tier: 'silver',
+      unlocked: revisionCleared >= 5,
+      progressLabel: `${Math.min(revisionCleared, 5)}/5`,
     },
     {
       id: 'first-cbt',

@@ -8,6 +8,7 @@ const SETTINGS_KEY = 'user_settings_v1';
 
 export const DEFAULT_SETTINGS: UserSettings = {
   learnerName: 'SSW Candidate',
+  avatarId: 'heavy-10t',
   theme: 'light',
   soundEnabled: true,
   animationsEnabled: true,
@@ -26,14 +27,20 @@ export const DEFAULT_SETTINGS: UserSettings = {
     showSinhala: true,
   },
   notificationsEnabled: true,
+  preferredJapaneseVoiceURI: '',
+  ttsRate: 0.95,
+  studyDaysOfWeek: [1, 2, 3, 4, 5, 6, 0],
+  reminderTime: '19:30',
 };
 
 export const DEFAULT_PROGRESS: LearnerProgressState = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   xp: 0,
   completedSectionIds: [],
   bookmarkedSectionIds: [],
+  bookmarkedKytIds: [],
   sectionNotes: {},
+  personalNotes: [],
   lastVisitedSection: null,
   masteredVocabIds: [],
   difficultVocabIds: [],
@@ -46,6 +53,12 @@ export const DEFAULT_PROGRESS: LearnerProgressState = {
   studySessions: [],
   dailyChecklist: {},
   recentActivities: [],
+  kytResults: {},
+  simulatorResults: {},
+  revisionQueue: {},
+  audioListeningCompleted: 0,
+  audioVocabCorrect: 0,
+  audioVocabTotal: 0,
 };
 
 function openDB(): Promise<IDBDatabase | null> {

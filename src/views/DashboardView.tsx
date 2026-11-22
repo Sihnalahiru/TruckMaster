@@ -1,19 +1,27 @@
 import {
   ArrowRight,
   BookOpen,
+  Brain,
   ClipboardCheck,
   Clock,
+  Compass,
   Flame,
   Gauge,
+  Headphones,
   Layers,
   Shield,
+  ShieldAlert,
   Target,
-  TrendingUp,
   Trophy,
   Truck,
+  UserCircle2,
 } from 'lucide-react';
 import { computeStreaks, getTodayKey } from '../lib/storage';
 import { evaluateTrophies, getDriverRank } from '../lib/gamification';
+import { KYT_SCENARIOS } from '../data/kytScenarios';
+import { SIMULATOR_SCENARIOS } from '../data/simulatorScenarios';
+import { DriverAvatarBadge } from '../components/DriverAvatar';
+import { ReadinessBreakdownCard } from '../components/ReadinessBreakdownCard';
 import { HighwayTruckProgress, TrophyBadgeIcon } from '../components/RewardEffects';
 import type {
   AppRoute,
@@ -134,6 +142,13 @@ export function DashboardView({
   }
 
   const todayChecklistCount = (progress.dailyChecklist[today] || []).length;
+  const smartDueCount = Object.values(progress.revisionQueue || {}).filter(
+    (item) => item.dueDate <= today,
+  ).length;
+  const kytDoneCount = Object.keys(progress.kytResults || {}).length;
+  const simDoneCount = Object.values(progress.simulatorResults || {}).filter(
+    (r) => r.bestOutcome === 'safe',
+  ).length;
 
   const ringRadius = 36;
   const ringCircumference = 2 * Math.PI * ringRadius;
@@ -145,24 +160,33 @@ export function DashboardView({
       <section className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
         <div className="bg-gradient-to-br from-slate-900 via-[#0B4F8A] to-slate-900 text-white p-5 sm:p-6 space-y-5">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-sky-200">
-                <span className="inline-flex items-center gap-1.5 font-bold text-amber-300">
-                  <Shield className="w-3.5 h-3.5" aria-hidden="true" />
-                  Lv.{rank.level} {rank.titleEn}
-                </span>
-                <span aria-hidden="true">·</span>
-                <span>{rank.vehicleClass}</span>
-                <span aria-hidden="true">·</span>
-                <span className="font-mono font-bold tabular-nums text-white">{progress.xp} XP</span>
-              </div>
+            <div className="flex items-start gap-4">
+              <button
+                type="button"
+                onClick={() => onNavigate('profile')}
+                aria-label="Open Driver Profile & Avatar customization"
+                className="shrink-0 rounded-2xl ring-2 ring-white/25 hover:ring-amber-300 transition-all"
+              >
+                <DriverAvatarBadge avatarId={settings.avatarId} size="lg" />
+              </button>
+              <div className="space-y-2 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-sky-200">
+                  <span className="inline-flex items-center gap-1.5 font-bold text-amber-300">
+                    <Shield className="w-3.5 h-3.5" aria-hidden="true" />
+                    Lv.{rank.level} {rank.titleEn}
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span>{rank.vehicleClass}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="font-mono font-bold tabular-nums text-white">{progress.xp} XP</span>
+                </div>
 
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white [text-wrap:balance]">
-                {settings.learnerName} — TruckMaster Cab
-              </h1>
-              <p className="text-sm text-sky-100 font-sinhala">
-                {rank.titleSi} · ජපාන SSW ට්‍රක් රථ රියදුරු අධ්‍යයන සහ CBT පුහුණු මධ්‍යස්ථානය
-              </p>
+                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white [text-wrap:balance]">
+                  {settings.learnerName} — TruckMaster Cab
+                </h1>
+                <p className="text-sm text-sky-100 font-sinhala">
+                  {rank.titleSi} · ජපාන SSW ට්‍රක් රථ රියදුරු අධ්‍යයන සහ CBT පුහුණු මධ්‍යස්ථානය
+                </p>
 
               {/* EXP Progress to Next License Class */}
               <div className="max-w-md pt-1 space-y-1">
@@ -175,6 +199,7 @@ export function DashboardView({
                     className="h-full bg-amber-400 rounded-full transition-all duration-500"
                     style={{ width: `${Math.max(rankPct, 4)}%` }}
                   />
+                </div>
                 </div>
               </div>
             </div>
@@ -289,6 +314,14 @@ export function DashboardView({
           </div>
         </div>
       </section>
+
+      {/* Readiness Score Breakdown (Preparation Indicator Only) */}
+      <ReadinessBreakdownCard
+        manifest={manifest}
+        progress={progress}
+        onNavigate={onNavigate}
+        onOpenSection={onOpenSection}
+      />
 
       {/* Main Split: Chapter Route Progress + Quick Launch / Trophies */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -475,6 +508,57 @@ export function DashboardView({
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
+                onClick={() => onNavigate('kyt')}
+                className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 transition-colors"
+              >
+                <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 mb-2" aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">KYT Hazard Lab</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+                  {kytDoneCount}/{KYT_SCENARIOS.length} scenes
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('simulator')}
+                className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-[#0D7A5F] transition-colors"
+              >
+                <Compass className="w-5 h-5 text-[#0D7A5F] dark:text-emerald-400 mb-2" aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">Road Simulator</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+                  {simDoneCount}/{SIMULATOR_SCENARIOS.length} safe
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('audio')}
+                className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-colors"
+              >
+                <Headphones className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mb-2" aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">Audio Studio</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">JP TTS &amp; Listening</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('review')}
+                className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-rose-500 transition-colors"
+              >
+                <Brain className="w-5 h-5 text-rose-600 dark:text-rose-400 mb-2" aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">Smart Revision</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
+                  {smartDueCount} due now
+                </p>
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('cbt')}
+                className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-[#0B4F8A] transition-colors"
+              >
+                <ClipboardCheck className="w-5 h-5 text-[#0B4F8A] dark:text-sky-400 mb-2" aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">CBT Quiz</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">15 papers · Sinhala</p>
+              </button>
+              <button
+                type="button"
                 onClick={() => onNavigate('flashcards')}
                 className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-[#0B4F8A] transition-colors"
               >
@@ -483,15 +567,6 @@ export function DashboardView({
                 <p className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
                   {flashcardsDueTotal} ready
                 </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => onNavigate('cbt')}
-                className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-[#0D7A5F] transition-colors"
-              >
-                <ClipboardCheck className="w-5 h-5 text-[#0D7A5F] dark:text-emerald-400 mb-2" aria-hidden="true" />
-                <p className="text-sm font-bold text-slate-900 dark:text-white">CBT Quiz</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">15 papers · Sinhala</p>
               </button>
               <button
                 type="button"
@@ -506,12 +581,12 @@ export function DashboardView({
               </button>
               <button
                 type="button"
-                onClick={() => onNavigate('analytics')}
+                onClick={() => onNavigate('profile')}
                 className="tm-card-press p-3.5 text-left rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-sky-500 transition-colors"
               >
-                <TrendingUp className="w-5 h-5 text-sky-600 dark:text-sky-400 mb-2" aria-hidden="true" />
-                <p className="text-sm font-bold text-slate-900 dark:text-white">Analytics</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Score trends</p>
+                <UserCircle2 className="w-5 h-5 text-sky-600 dark:text-sky-400 mb-2" aria-hidden="true" />
+                <p className="text-sm font-bold text-slate-900 dark:text-white">Driver Profile</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Notes, Calendar &amp; Export</p>
               </button>
             </div>
           </section>

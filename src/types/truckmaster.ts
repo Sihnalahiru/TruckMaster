@@ -1,6 +1,9 @@
 export type AppRoute =
   | 'dashboard'
   | 'study'
+  | 'kyt'
+  | 'simulator'
+  | 'audio'
   | 'vocabulary'
   | 'kanji'
   | 'flashcards'
@@ -8,10 +11,19 @@ export type AppRoute =
   | 'review'
   | 'analytics'
   | 'missions'
+  | 'profile'
   | 'settings'
   | 'admin';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
+
+export type DriverAvatarId =
+  | 'heavy-10t'
+  | 'city-4t'
+  | 'kyt-inspector'
+  | 'cold-chain'
+  | 'night-express'
+  | 'cargo-master';
 
 export interface LanguageDisplayPrefs {
   showJapanese: boolean;
@@ -23,6 +35,7 @@ export interface LanguageDisplayPrefs {
 
 export interface UserSettings {
   learnerName: string;
+  avatarId: DriverAvatarId;
   theme: ThemeMode;
   soundEnabled: boolean;
   animationsEnabled: boolean;
@@ -35,6 +48,10 @@ export interface UserSettings {
   autoNextInCbt: boolean;
   languagePrefs: LanguageDisplayPrefs;
   notificationsEnabled: boolean;
+  preferredJapaneseVoiceURI: string;
+  ttsRate: number; // 0.72 | 1.0
+  studyDaysOfWeek: number[]; // 0=Sun..6=Sat
+  reminderTime: string; // HH:MM
 }
 
 export interface ManifestSectionSummary {
@@ -305,7 +322,7 @@ export interface CbtAttemptRecord {
 export interface StudySessionLog {
   id: string;
   date: string; // YYYY-MM-DD
-  activity: 'notes' | 'vocabulary' | 'kanji' | 'flashcards' | 'cbt' | 'revision';
+  activity: 'notes' | 'vocabulary' | 'kanji' | 'flashcards' | 'cbt' | 'revision' | 'kyt' | 'simulator' | 'audio';
   minutes: number;
   xpEarned: number;
   timestamp: string;
@@ -313,7 +330,7 @@ export interface StudySessionLog {
 
 export interface ActivityEvent {
   id: string;
-  type: 'section' | 'vocab' | 'kanji' | 'flashcard' | 'cbt' | 'timer';
+  type: 'section' | 'vocab' | 'kanji' | 'flashcard' | 'cbt' | 'timer' | 'kyt' | 'simulator' | 'audio' | 'revision';
   label: string;
   xp: number;
   timestamp: string;
@@ -328,12 +345,63 @@ export interface InProgressExamState {
   startedAt: string;
 }
 
+export interface KytScenarioResult {
+  scenarioId: string;
+  attempts: number;
+  bestScorePct: number;
+  hotspotsFound: number;
+  hotspotsTotal: number;
+  completedAt: string;
+}
+
+export interface SimulatorScenarioResult {
+  scenarioId: string;
+  attempts: number;
+  bestOutcome: 'safe' | 'caution' | 'danger';
+  completedAt: string;
+}
+
+export interface SmartRevisionItem {
+  id: string;
+  kind: 'question' | 'kanji' | 'vocab';
+  refId: string;
+  titleJa: string;
+  titleRuby?: string;
+  romaji?: string;
+  titleEn: string;
+  titleSi: string;
+  answerEn: string;
+  answerSi: string;
+  explanationSi?: string;
+  sourceLabel?: string;
+  chapterId?: string;
+  sectionId?: string;
+  imageSrc?: string | null;
+  easeFactor: number;
+  intervalDays: number;
+  repetitions: number;
+  dueDate: string; // YYYY-MM-DD
+  missCount: number;
+  addedAt: string;
+}
+
+export interface PersonalNoteItem {
+  id: string;
+  title: string;
+  body: string;
+  chapterId: string; // 'general' | 'ch-01'..'ch-04'
+  sectionId?: string;
+  updatedAt: string;
+}
+
 export interface LearnerProgressState {
   schemaVersion: number;
   xp: number;
   completedSectionIds: string[];
   bookmarkedSectionIds: string[];
+  bookmarkedKytIds: string[];
   sectionNotes: Record<string, string>;
+  personalNotes: PersonalNoteItem[];
   lastVisitedSection: { chapterId: string; sectionId: string } | null;
   masteredVocabIds: string[];
   difficultVocabIds: string[];
@@ -346,6 +414,12 @@ export interface LearnerProgressState {
   studySessions: StudySessionLog[];
   dailyChecklist: Record<string, string[]>; // date -> completed mission keys
   recentActivities: ActivityEvent[];
+  kytResults: Record<string, KytScenarioResult>;
+  simulatorResults: Record<string, SimulatorScenarioResult>;
+  revisionQueue: Record<string, SmartRevisionItem>;
+  audioListeningCompleted: number;
+  audioVocabCorrect: number;
+  audioVocabTotal: number;
 }
 
 export interface AuditSummaryPayload {
